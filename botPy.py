@@ -411,13 +411,12 @@ def readServer():
 
 
 	while True:
-		try:
-			messageServer = GameServer.readMessage()
+		if GameServer.readMessage()[1] == 18:
+			messageServer = GameServer.readMessage()[0]
 			mostRecentMessage = messageServer
-			#print("most_recent_loaded")
-		except:
-			#print("noMessage")
-			continue
+
+		if GameServer.readMessage()[1] == 27:
+			got_shot()
 
 		#messageServer = GameServer.readMessage()
 		#print(messageServer)
@@ -449,7 +448,11 @@ def main():
 		continue
 		#lines till except continue guarantee robust start
 		#print("here")
-		message = GameServer.readMessage()
+		if GameServer.readMessage()[1] == 18:
+			messageServer = GameServer.readMessage()[0]
+
+		if GameServer.readMessage()[1] == 27:
+			got_shot()
 		print(message)
 
 		if message != {} and gameStart:
@@ -476,8 +479,15 @@ def main():
 			goToCampPoints(x,y,campPoints)
 			print("safe pos reached")
 			while True:
-				message = GameServer.readMessage()
-				print(message)
+
+				if GameServer.readMessage()[1] == 18:
+					messageServer = GameServer.readMessage()[0]
+					mostRecentMessage = messageServer
+
+				if GameServer.readMessage()[1] == 27:
+					got_shot()
+
+
 			safePos = True
 		print("main loop iter" + str(iMain))
 		#time.sleep(100)
