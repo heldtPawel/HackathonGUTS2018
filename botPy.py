@@ -265,7 +265,7 @@ while True:
 	message = GameServer.readMessage()
 	print(message)
 	print(str(randX) + str(randY))
-	fireCoord(message,randX,randY)
+	#fireCoord(message,randX,randY)
 	if i == 14:
 		randX = random.randint(-70, 70)
 		randY = random.randint(-100, 100)
