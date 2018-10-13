@@ -382,16 +382,10 @@ if messageTemp[1] == 18:
 def readServer():
 	global messageServer
 	while True:
-<<<<<<< HEAD
-=======
-
->>>>>>> d00250bc5e0fbbe288059bd14d68cfd6cf0b1e44
 		try:
 			messageServer = GameServer.readMessage()[0]
 		except:
 			continue
-<<<<<<< HEAD
-=======
 
 		if GameServer.readMessage()[1] == 18:
 			messageServer = GameServer.readMessage()[0]
@@ -400,17 +394,18 @@ def readServer():
 		if GameServer.readMessage()[1] == 27:
 			got_shot()
 
->>>>>>> d00250bc5e0fbbe288059bd14d68cfd6cf0b1e44
 
 
 def main():
 	# Main loop
+	has_target = False
 	gameStart = True
 	gameLoaded = False
 	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
 	iMain = 0
 	x = 0
 	y = 0
+	target = {}
 	safePos = False
 
 	while True:
@@ -425,8 +420,36 @@ def main():
 		if GameServer.readMessage()[1] == 27:
 			got_shot()
 
+
 		#here we should start applying multithreading
 		#print(str(x) + " <- x, y -> " + str(y))
+
+
+"""
+		if has_target:
+			fireCoord(messageServer, target['X'], target['Y'], x, y)
+			if 'Id' in messageServer and messageServer['Id'] == target['Id']:
+				target =
+		else:
+			scan_result = scan()
+			if scan_result["Tank"] != {}:
+				print("detectank")
+				has_target = True
+				low_hp = 6
+				low_dist = 200
+				for tank in scan_result["Tank"]:
+					if tank['hp'] < low_hp:
+						low_hp = tank['hp']
+						tank['X'], tank['Y'] = Tx, Ty
+					elif tank['hp'] == low_hp:
+						if tank['dist'] < low_dist:
+							low_dist = tank['dist']
+							tank['X'], tank['Y'] = Tx, Ty
+			else:
+				has_target = False
+"""
+
+
 		if safePos == False:
 			goToCampPoints(x,y,campPoints)
 			print("safe pos reached")
