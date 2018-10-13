@@ -259,7 +259,7 @@ def scan():
 	print(str(id) + " | "+str(x) + " | " + str(y))
 	print("Start Head: "+str(current_heading))
 	for i in range(18):
-		message_in_function = message
+		message_in_function = GameServer.readMessage()[0]
 		if message_in_function is None:
 			pass
 		elif "Id" in message_in_function:
@@ -312,13 +312,15 @@ while True:
 
 	if GameServer.readMessage()[1]==27:
 		got_shot()
-		
+
 	print(message)
+
+
 
 	if message != {} and gameStart:
 		id = start(message)
 		gameStart = False
-		print("firstMessageRecieved")
+		print("firstMessageReceived")
 
 
 	try:
@@ -334,12 +336,28 @@ while True:
 
 	if message['Id'] == id:
 		updatePos()
+		# if health drops below 3, get health points
+		if message["Health"]<=2:
+			scan_result = scan()
+			print("Health packs: {0}".format(scan_result))
+			l=[]
+			for k, v in scan_result["HealthPickup"].items():
+				print("Health packs: {0}".format(v))
+				l.append(v)
+			l.sort(key=lambda x: x[2])
+			print ("{0}".format(l))
+			k=[l[0]]
+			goToCampPoints(x,y,k)
+
+
+
 
 
 	if has_target:
 		fireCoord(message, Ty, Ty, x, y)
 	else:
 		scan_result = scan()
+
 		if scan_result["Tank"] != {}:
 			for tank in scan_result["Tank"]:
 				print(tank)
@@ -348,7 +366,7 @@ while True:
 	print("ye")
 	#here we should start applying multithreading
 	print(str(x) + " <- x, y -> " + str(y))
-	goToCampPoints(x,y,campPoints)
+	#goToCampPoints(x,y,campPoints)
 
 
 	i += 1
