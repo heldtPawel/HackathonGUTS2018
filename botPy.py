@@ -170,24 +170,24 @@ GameServer = ServerComms(args.hostname, args.port)
 logging.info("Creating tank with name '{}'".format(args.name))
 GameServer.sendMessage(ServerMessageTypes.CREATETANK, {'Name': args.name})
 #aiming functions
-def aimCoord(message, x, y, tankX, tankY, aimHeading):
+def aimAngle(message, aimHeading):
 
         if isTurnLeft(message['TurretHeading'], aimHeading):
                 logging.info("Turning turret  left")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': message['TurretHeading'] - aimHeading})
+                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
         else:
                 logging.info("Turning turret right")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading - message['TurretHeading']})
+                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
 
 def fireCoord(message,x,y):
     tankX = message['X']
     tankY = message['Y']
     aimHeading = getHeading(tankX, tankY, x, y)
-    if (abs(message['Heading'] - aimHeading) < 1.0):
+    if (abs(message['Heading'] - aimHeading) < 10.0):
         logging.info("Firing")
         GameServer.sendMessage(ServerMessageTypes.FIRE)
     else:
-        aimCoord(message, x, y, tankX, tankY, aimHeading)
+        aimAngle(message, aimHeading)
 
 #math and helper functions
 
@@ -258,12 +258,37 @@ def goToCampPoints(message, campPoints):
 
 
 # Main loop - read game messages, ignore them and randomly perform actions
+randX = random.randint(0,70)
+randY = random.randint(0,100)
+i = 0
+while True:
+	message = GameServer.readMessage()
+	#print(message)
+	print(str(randX) + str(randY))
+	fireCoord(message,randX,randY)
+	if i == 99:
+		randX = random.randint(0, 70)
+		randY = random.randint(0, 100)
+	elif i == 10:
+		logging.info("Turning randomly")
+		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(0, 359)})
+	elif i == 15:
+		logging.info("Moving randomly")
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
+	i = i + 1
+	if i > 100:
+		i = 0
+"""
 gameStart = True
 campPoints = [[0,100], [0,-100]]
 message = {}
+i = 0
 while True:
 	message = GameServer.readMessage()
 	print("here")
+	
+
+	
 	if message != {} and gameStart:
 		#print("here")
 		id = start(message)
@@ -281,3 +306,4 @@ while True:
 	#elif i == 15:
 	#	logging.info("Moving randomly")
 	#	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
+"""
