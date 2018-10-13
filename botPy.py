@@ -239,8 +239,9 @@ def goToCampPoints(x, y, campPoints):
 def updatePos():
 	x = message['X']
 	y = message['Y']
+	our_heading = message['Heading']
 
-def scan(message):
+def scan():
 	#main output variable, initialize with primary keys which are types of objects
 	#each type will have a dictionary for value where they store each object and in that dictionary,
 	#the keys will be id and will be mapped to its attributes
@@ -254,30 +255,29 @@ def scan(message):
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
-	current_heading = message["TurretHeading"]
-	print(str(our_id) + " | "+str(our_x) + " | " + str(our_y))
+	current_heading = our_heading
+	print(str(id) + " | "+str(x) + " | " + str(y))
 	print("Start Head: "+str(current_heading))
 	for i in range(18):
-		message_in_function = GameServer.readMessage()
+		message_in_function = message
 		if message_in_function is None:
 			pass
 		elif "Id" in message_in_function:
-			id = message_in_function["Id"]
-			if (id != our_id):
+			t_id = message_in_function["Id"]
+			if (t_id != id):
 				type = message_in_function["Type"]
-				x = message_in_function["X"]
-				y = message_in_function["Y"]
+				t_x = message_in_function["X"]
+				t_y = message_in_function["Y"]
 				dist = calculateDistance(our_x,our_y,x,y)
 
 				#for each t
-				scan_result[type][id] = {"x":x,"y":y,"dist": dist}
+				scan_result[type][t_id] = {"x":t_x,"y":t_y,"dist": dist}
 
 				if type=="Tank":
-					scan_result[type][id]["hp"] = message_in_function["Health"]
-
-				if (dist <= 15):
-					scan_result["Emergency"] = True
-					break
+					scan_result[type][t_id]["hp"] = message_in_function["Health"]
+					if (dist <= 15):
+						scan_result["Emergency"] = True
+						break
 
 		current_heading =(current_heading + 20) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
@@ -295,7 +295,8 @@ x = 0
 y = 0
 Tx = random.randint(-70,70)
 Ty = random.randint(-100,100)
-
+our_heading = 0
+has_target = False
 Target = {}
 while True:
 	#lines till except continue guarantee robust start
@@ -318,15 +319,19 @@ while True:
 	except:
 		print("waiting for data")
 		continue
-	if Taq and i == 9:
-		Tx = random.randint(-70, 70)
-		Ty = random.randint(-100, 100)
+
 	if message['Id'] == id:
 		updatePos()
 
 
+	if has_target:
+		fireCoord(message, Ty, Ty, x, y)
+	else:
+		scan_result = scan()
+		if scan_result["Tank"] != {}:
+			for tank in scan_result["Tank"]:
+				print(tank)
 
-	fireCoord(message, Ty, Ty, x, y)
 	time.sleep(0.01)
 	print("ye")
 	#here we should start applying multithreading
