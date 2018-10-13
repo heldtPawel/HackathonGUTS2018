@@ -214,8 +214,8 @@ randY = random.randint(0,70)
 while True:
     message = GameServer.readMessage()
     print(message)
-    logging.info("Turning turret  left")
-    GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': message['TurretHeading'] - 1.0})
+    #logging.info("Turning turret  ")
+    #GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 0.5 - message['TurretHeading'] })
     """
     fireCoord(message,0,0)
     if i == 5:

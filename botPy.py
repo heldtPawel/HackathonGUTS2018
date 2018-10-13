@@ -169,6 +169,25 @@ GameServer = ServerComms(args.hostname, args.port)
 # Spawn our tank
 logging.info("Creating tank with name '{}'".format(args.name))
 GameServer.sendMessage(ServerMessageTypes.CREATETANK, {'Name': args.name})
+#aiming functions
+def aimCoord(message, x, y, tankX, tankY, aimHeading):
+
+        if isTurnLeft(message['TurretHeading'], aimHeading):
+                logging.info("Turning turret  left")
+                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': message['TurretHeading'] - aimHeading})
+        else:
+                logging.info("Turning turret right")
+                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading - message['TurretHeading']})
+
+def fireCoord(message,x,y):
+    tankX = message['X']
+    tankY = message['Y']
+    aimHeading = getHeading(tankX, tankY, x, y)
+    if (abs(message['Heading'] - aimHeading) < 1.0):
+        logging.info("Firing")
+        GameServer.sendMessage(ServerMessageTypes.FIRE)
+    else:
+        aimCoord(message, x, y, tankX, tankY, aimHeading)
 
 #math and helper functions
 
@@ -229,7 +248,7 @@ def goToCampPoints(message, campPoints):
 
 	#third part moves tank to that points
 	logging.info("Moving to point")
-        GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': -closestDist})
+	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': -closestDist})
 
 	#fourth part sets tank on the course to goal
 	 #tba
