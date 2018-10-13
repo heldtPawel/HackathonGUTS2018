@@ -121,7 +121,7 @@ class ServerComms(object):
 			binascii.hexlify(messageData),
 			self.MessageTypes.toString(messageType),
 			messagePayload))
-		return messagePayload
+		return messagePayload, messageType
 
 	def sendMessage(self, messageType=None, messagePayload=None):
 		'''
@@ -251,13 +251,26 @@ def scan():
 	print(scan_result)
 
 
+
+def got_shot():
+	for i in range(1,3):
+		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
+
 # Main loop - read game messages, ignore them and randomly perform actions
 campPoints = [[0,100], [0,-100]]
 
 i=0
 
 while True:
-	message = GameServer.readMessage()
+
+	if GameServer.readMessage()[1]==18:
+		message = GameServer.readMessage()[0]
+
+	if GameServer.readMessage()[1]==27:
+		got_shot()
+
+
 	if i == 0:
 		our_id = message['Id']
 
