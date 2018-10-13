@@ -294,10 +294,10 @@ def scan():
 					if (dist <= 15):
 						scan_result["Emergency"] = True
 						break
-		current_turret_heading =(current_turret_heading + 20) % 360
+		current_turret_heading =(current_turret_heading + 5) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
-		time.sleep(0.3)
-		if (math.fabs(current_turret_heading-initial_turret_head) < 17):
+		time.sleep(0.05)
+		if (math.fabs(current_turret_heading-initial_turret_head) < 1):
 			turn = False
 
 	print("End Head: " + str(current_turret_heading))
@@ -326,7 +326,6 @@ def readServer():
 			serverResponse = GameServer.readMessage()
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
-				print("msg loaded")
 		except:
 			continue
 
