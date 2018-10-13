@@ -372,27 +372,20 @@ def got_shot():
 
 
 #getting our tank id
-global idTank
-idTank = GameServer.readMessage()[0]['Id']
+messageTemp = GameServer.readMessage()
+if messageTemp[1] == 18:
+	global idTank
+	idTank = messageTemp[0]['Id']
 
 
 
 def readServer():
 	global messageServer
 	while True:
-<<<<<<< HEAD
 		try:
 			messageServer = GameServer.readMessage()[0]
 		except:
 			continue
-=======
-		if GameServer.readMessage()[1] == 18:
-			messageServer = GameServer.readMessage()[0]
-			mostRecentMessage = messageServer
-
-		if GameServer.readMessage()[1] == 27:
-			got_shot()
->>>>>>> 0553ba6ecd61444c1319aa0d5fa474a26ad53aa6
 
 
 def main():
@@ -502,26 +495,14 @@ has_target = False
 Target = {}
 while True:
 	#lines till except continue guarantee robust start
-<<<<<<< HEAD
-	print("test")
-=======
 	print(GameServer.readMessage()[1])
->>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 	if GameServer.readMessage()[1]==18:
 		message = GameServer.readMessage()[0]
 
 	if GameServer.readMessage()[1]==27:
-<<<<<<< HEAD
-		got_shot()
-
-
-	#print(message)
-
-=======
 		print("got shot!!!")
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
 		#got_shot()
->>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 
 
 
@@ -530,22 +511,6 @@ while True:
 		gameStart = False
 		print("firstMessageReceived")
 
-<<<<<<< HEAD
-
-	try:
-		if gameLoaded == False and message["Id"] == id and message['X'] != 0:
-			updatePos()
-			gameLoaded = True
-			print("gameLoaded")
-		else:
-			print("fuck sake")
-			continue
-	except:
-		print("waiting for data")
-		continue
-
-=======
->>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 	if message['Id'] == id:
 		updatePos()
 
@@ -569,10 +534,6 @@ while True:
 	i += 1
 	if i > 10:
 		i = 0
-<<<<<<< HEAD
-	print(i)
-=======
->>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 '''
 
 '''
