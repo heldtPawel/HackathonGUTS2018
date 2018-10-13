@@ -372,7 +372,23 @@ def got_shot():
 
 #math and helper functions
 
+def get_x(message):
+	return(message['X'])
 
+def get_y(message):
+	return(message['Y'])
+
+def get_heading(message):
+	return(message['Heading'])
+
+def get_turretHeading(message):
+	return(message['TurretHeading'])
+
+def get_health(message):
+	return(message['Helth'])
+
+def get_ammo(message):
+	return(message['Ammo'])
 #global messageServer
 
 def readServer():
@@ -388,6 +404,11 @@ def readServer():
 	#first iteration
 	messageServer = GameServer.readMessage()
 	mostRecentMessage = messageServer
+	id = mostRecentMessage["Id"]
+
+
+
+
 	while True:
 		try:
 			messageServer = GameServer.readMessage()
@@ -417,7 +438,8 @@ def main():
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
 		try:
 			print("llllllllllllllllllllllllllllllllll")
-			print(mostRecentMessage)
+			print(get_x(mostRecentMessage))
+			print(get_y(mostRecentMessage))
 			print("uuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
 
 		except:
