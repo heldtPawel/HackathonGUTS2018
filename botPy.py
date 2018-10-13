@@ -268,7 +268,7 @@ def scan():
 				type = message_in_function["Type"]
 				t_x = message_in_function["X"]
 				t_y = message_in_function["Y"]
-				dist = calculateDistance(our_x,our_y,x,y)
+				dist = calculateDistance(x,y,t_x,t_y)
 
 				#for each t
 				scan_result[type][t_id] = {"x":t_x,"y":t_y,"dist": dist}
@@ -336,21 +336,6 @@ while True:
 
 	if message['Id'] == id:
 		updatePos()
-		"""
-		# if health drops below 3, get health points
-		if message["Health"]<=2:
-			scan_result = scan()
-			print("Health packs: {0}".format(scan_result))
-			l=[]
-			for k, v in scan_result["HealthPickup"].items():
-				print("Health packs: {0}".format(v))
-				l.append(v)
-			l.sort(key=lambda x: x[2])
-			print ("{0}".format(l))
-			k=[l[0]]
-			goToCampPoints(x,y,k)
-
-"""
 
 
 
