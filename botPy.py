@@ -123,7 +123,7 @@ class ServerComms(object):
 			binascii.hexlify(messageData),
 			self.MessageTypes.toString(messageType),
 			messagePayload))
-		return messagePayload
+		return messagePayload, messageType
 
 	def sendMessage(self, messageType=None, messagePayload=None):
 		'''
@@ -402,11 +402,12 @@ def readServer():
 	global ammo
 
 	#first iteration
-	messageServer = GameServer.readMessage()
-	mostRecentMessage = messageServer
-	id = mostRecentMessage["Id"]
+	if GameServer.readMessage()[1] == 18:
+		messageServer = GameServer.readMessage()[0]
+		mostRecentMessage = messageServer
 
-
+	if GameServer.readMessage()[1] == 27:
+		got_shot()
 
 
 	while True:
