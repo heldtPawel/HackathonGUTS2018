@@ -334,7 +334,7 @@ def scan():
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
-	current_heading = our_heading
+	current_heading = heading
 	print(str(id) + " | "+str(x) + " | " + str(y))
 	print("Start Head: "+str(current_heading))
 	for i in range(18):
@@ -343,7 +343,7 @@ def scan():
 			pass
 		elif "Id" in message_in_function:
 			t_id = message_in_function["Id"]
-			if (t_id != id):
+			if (t_id != id):88pXMEXXyUzN4KbO
 				type = message_in_function["Type"]
 				t_x = message_in_function["X"]
 				t_y = message_in_function["Y"]
