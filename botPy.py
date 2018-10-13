@@ -279,34 +279,37 @@ def scan():
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
-	current_heading = heading
-	print(str(id) + " | "+str(x) + " | " + str(y))
-	print("Start Head: "+str(current_heading))
-	for i in range(18):
-		message_in_function = GameServer.readMessage()[0]
+	initial_turret_head = messageServer['TurretHeading']
+	current_turret_heading = messageServer['TurretHeading']
+	print("Start Head: "+str(current_turret_heading))
+	message_in_function = None
+	turn = True
+	while (turn):
+		if serverResponse[1] == 18:
+			message_in_function = serverResponse[0]
 		if message_in_function is None:
-			pass
+			continue
 		elif "Id" in message_in_function:
 			t_id = message_in_function["Id"]
-			if (t_id != id):
-				type = message_in_function["Type"]
+			if (t_id != idTank):
+				category = message_in_function["Type"]
 				t_x = message_in_function["X"]
 				t_y = message_in_function["Y"]
-				dist = calculateDistance(x,y,t_x,t_y)
-
+				dist = calculateDistance(messageServer['X'],messageServer['Y'],t_x,t_y)
 				#for each t
-				scan_result[type][t_id] = {"x":t_x,"y":t_y,"dist": dist}
-
-				if type=="Tank":
-					scan_result[type][t_id]["hp"] = message_in_function["Health"]
+				scan_result[category][t_id] = {"x":t_x,"y":t_y,"dist": dist}
+				if category=="Tank":
+					scan_result[category][t_id]["hp"] = message_in_function["Health"]
 					if (dist <= 15):
 						scan_result["Emergency"] = True
 						break
+		current_turret_heading =(current_turret_heading + 20) % 360
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
+		time.sleep(0.3)
+		if (math.fabs(current_turret_heading-initial_turret_head) < 17):
+			turn = False
 
-		current_heading =(current_heading + 20) % 360
-		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
-
-	print("End Head: " + str(current_heading))
+	print("End Head: " + str(current_turret_heading))
 	return scan_result
 
 
@@ -344,13 +347,14 @@ def main():
 	gameLoaded = False
 	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
 	iMain = 0
-	x = 0
-	y = 0
 	safePos = False
 
 	while True:
-
 		time.sleep(1)
+		if (iMain % 15)==0:
+			scan_out = scan()
+			print(scan_out)
+		iMain+=1
 		continue
 		#lines till except continue guarantee robust start
 		#print("here")
@@ -410,7 +414,7 @@ t3 = threading.Thread(target=movement)
 t1.start()
 time.sleep(1)
 t2.start()
-t3.start()
+#t3.start()
 '''
 # Main loop
 gameStart = True
