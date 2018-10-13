@@ -174,44 +174,9 @@ GameServer = ServerComms(args.hostname, args.port)
 logging.info("Creating tank with name '{}'".format(args.name))
 GameServer.sendMessage(ServerMessageTypes.CREATETANK, {'Name': args.name})
 #aiming functions
-def aimAngle(message, aimHeading):
 
-	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
 
-def fireCoord(message, x, y, Tx, Ty):
-	print("THis should print")
-	aimHeading = getHeading(x, y, Tx, Ty)
-	if (abs(message['TurretHeading'] - aimHeading) < 10.0):
-		logging.info("Firing")
-		GameServer.sendMessage(ServerMessageTypes.FIRE)
-	else:
-		aimAngle(message, aimHeading)
 
-def find_Shoot(has_target, target):
-	if has_target:
-		fireCoord(messageServer, target['X'], target['Y'], x, y)
-		if 'Id' in messageServer and messageServer['Id'] == target['Id']:
-			target = messageServer
-	# if target
-	else:
-		scan_result = scan()
-		if scan_result["Tank"] != {}:
-			print("detectank")
-			has_target = True
-			low_hp = 6
-			low_dist = 200
-			for tank in scan_result["Tank"]:
-				if tank['hp'] < low_hp:
-					low_hp = tank['hp']
-					target = tank
-				elif tank['hp'] == low_hp:
-					if tank['dist'] < low_dist:
-						low_dist = tank['dist']
-						target = tank
-		else:
-			has_target = False
-
-	return has_target, target
 #math and helper functions
 def calculateDistance(ownX, ownY, otherX, otherY):
 	headingX = otherX - ownX
@@ -294,7 +259,7 @@ def scan():
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
-	print(messageServer)
+	#print(messageServer)
 	initial_turret_head = messageServer['TurretHeading']
 	current_turret_heading = initial_turret_head
 	print("Start Head: "+str(current_turret_heading))
@@ -329,6 +294,36 @@ def scan():
 	print("End Head: " + str(current_turret_heading))
 	return scan_result
 
+def fastScan():
+	initial_turret_head = messageServer['TurretHeading']
+	current_turret_heading = initial_turret_head
+	turn = True
+
+	while (turn):
+		if serverResponse[1] == 18:
+			message_in_function = serverResponse[0]
+			if message_in_function["Id"] != idTank and message_in_function["Type"] == "Tank":
+				print("enemyTank")
+				if message_in_function["Health"] < 7:
+					dist = calculateDistance(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+					if dist < 30:
+						print(str(dist) + " so close")
+						fireCoord(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+						print("FIRE!!!!!!")
+						break
+
+		current_turret_heading =(current_turret_heading + 15) % 360
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
+		time.sleep(0.15)
+		if (math.fabs(current_turret_heading-initial_turret_head) < 1):
+			turn = False
+			print("no tanks found")
+
+
+
+		if message_in_function is None:
+			continue
+
 
 def got_shot():
 	for i in range(1,3):
@@ -336,14 +331,48 @@ def got_shot():
 		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
 
 
-#getting our tank id
-messageTemp = GameServer.readMessage()
-if messageTemp[1] == 18:
-	global idTank
-	idTank = messageTemp[0]['Id']
-	print(str(idTank)+" idtank")
+def find_Shoot(has_target, target):
+	if has_target:
+		fireCoord(messageServer, target['X'], target['Y'], x, y)
+		if 'Id' in messageServer and messageServer['Id'] == target['Id']:
+			target = messageServer
+	# if target
+	else:
+		scan_result = scan()
+		if scan_result["Tank"] != {}:
+			print("detectank")
+			has_target = True
+			low_hp = 6
+			low_dist = 200
+			for tank in scan_result["Tank"]:
+				if tank['hp'] < low_hp:
+					low_hp = tank['hp']
+					target = tank
+				elif tank['hp'] == low_hp:
+					if tank['dist'] < low_dist:
+						low_dist = tank['dist']
+						target = tank
+		else:
+			has_target = False
+
+	return has_target, target
 
 
+def aimAngle(aimHeading):
+
+	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
+
+def fireCoord(x, y, Tx, Ty):
+	aimHeading = getHeading(x, y, Tx, Ty)
+	if (abs(messageServer['TurretHeading'] - aimHeading) < 10.0):
+		logging.info("Firing")
+		GameServer.sendMessage(ServerMessageTypes.FIRE)
+	else:
+		aimAngle(aimHeading)
+		time.sleep(0.25)
+		logging.info("Firing")
+		GameServer.sendMessage(ServerMessageTypes.FIRE)
+#thread functions
 def readServer():
 	global messageServer
 	global serverResponse
@@ -358,13 +387,17 @@ def readServer():
 
 def main():
 	iMain = 15
+	time.sleep(3)
 	while True:
+		GameServer.sendMessage(ServerMessageTypes.FIRE)
+		#fastScan()
+
 		#time.sleep(100)
-		if (iMain % 15)==0:
-			scan_out = scan()
+		#if (iMain % 15)==0:
+			#scan_out = scan()
 			#print(scan_out)
-		iMain+=1
-		time.sleep(1)
+		#iMain+=1
+		#time.sleep(1)
 
 '''
 		print(scan_out)
@@ -383,8 +416,8 @@ def main():
 					outer_list.append([inner_list])
 				print(outer_list)
 				goToForLists(x,y,outer_list)
-'''
-		'''
+
+
 		if safePos == False:
 			goToCampPoints(x,y,campPoints)
 			print("safe pos reached")
@@ -395,7 +428,7 @@ def main():
 
 def movement():
 	while True:
-		#goToForLists(messageServer['X'], messageServer['Y'], [[60,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
+		goToForLists(messageServer['X'], messageServer['Y'], [[0,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
 		print("arrived")
 		if serverResponse[1] == 18:
 			pass#print("its bout me")
@@ -414,6 +447,12 @@ def movement():
 		time.sleep(70)
 
 '''
+#getting our tank id
+messageTemp = GameServer.readMessage()
+if messageTemp[1] == 18:
+	global idTank
+	idTank = messageTemp[0]['Id']
+	print(str(idTank)+" idtank")
 
 t1 = threading.Thread(target=readServer)
 t2 = threading.Thread(target=main)
