@@ -439,9 +439,9 @@ def main():
 			if gameLoaded == False and message["Id"] == id and message['X'] != 0:
 				y = message['Y']
 				x = message['X']
-				gameLoad = True
+				gameLoaded = True
 				print("gameLoaded")
-			else:
+			elif gameLoaded == False:
 				continue
 		except:
 			print("waiting for data")
