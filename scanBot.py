@@ -205,14 +205,23 @@ our_x = 0;
 our_y = 0;
 our_heading = 0;
 
+
 def scan(message):
+	#main output variable, initialize with primary keys which are types of objects
+	#each type will have a dictionary for value where they store each object and in that dictionary,
+	#the keys will be id and will be mapped to its attributes
+	#the form is: scan_result = {type1: 	{id:{attr1:val, attr2:val},
+											#id2:{attr1:val, attr2:val}},
+								 #type2: 	{id3:{attr1:val, attr2:val},
+											#id4:{attr1:val, attr2:val}}}
 	scan_result = {}
 	scan_result["Tank"] = {}
 	scan_result["HealthPickup"] = {}
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
+	scan_result["Emergency"] = False
 	current_heading = message["TurretHeading"]
-	print(str(our_id) + " | "+str(our_x) + " | " +str(our_y) )
+	print(str(our_id) + " | "+str(our_x) + " | " + str(our_y))
 	print("Start Head: "+str(current_heading))
 	for i in range(18):
 		message_in_function = GameServer.readMessage()
@@ -224,11 +233,17 @@ def scan(message):
 				type = message_in_function["Type"]
 				x = message_in_function["X"]
 				y = message_in_function["Y"]
-				scan_result[type][id] = {"x":x,"y":y,"distance":calculateDistance(our_x,our_y,x,y)}
+				dist = calculateDistance(our_x,our_y,x,y)
+
+				#for each t
+				scan_result[type][id] = {"x":x,"y":y,"dist": dist}
 
 				if type=="Tank":
 					scan_result[type][id]["hp"] = message_in_function["Health"]
 
+				if (dist <= 15):
+					scan_result["Emergency"] = True
+					break
 
 		current_heading =(current_heading + 20) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
@@ -241,7 +256,6 @@ def scan(message):
 campPoints = [[0,100], [0,-100]]
 
 i=0
-
 
 while True:
 	message = GameServer.readMessage()
@@ -257,7 +271,7 @@ while True:
 				our_y = message['Y']
 				our_heading = message['Heading']
 
-				if (i % 40)==0:
+				if (i % 20)==0:
 					logging.info("scanning")
 					scan(message)
 
