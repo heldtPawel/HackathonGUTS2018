@@ -183,7 +183,7 @@ def fireCoord(message,x,y):
     tankX = message['X']
     tankY = message['Y']
     aimHeading = getHeading(tankX, tankY, x, y)
-    if (abs(message['Heading'] - aimHeading) < 10.0):
+    if (abs(message['TurretHeading'] - aimHeading) < 10.0):
         logging.info("Firing")
         GameServer.sendMessage(ServerMessageTypes.FIRE)
     else:
@@ -258,25 +258,19 @@ def goToCampPoints(message, campPoints):
 
 
 # Main loop - read game messages, ignore them and randomly perform actions
-randX = random.randint(0,70)
-randY = random.randint(0,100)
+randX = random.randint(-70,70)
+randY = random.randint(-100,100)
 i = 0
 while True:
 	message = GameServer.readMessage()
-	#print(message)
+	print(message)
 	print(str(randX) + str(randY))
 	fireCoord(message,randX,randY)
-	if i == 99:
-		randX = random.randint(0, 70)
-		randY = random.randint(0, 100)
-	elif i == 10:
-		logging.info("Turning randomly")
-		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(0, 359)})
-	elif i == 15:
-		logging.info("Moving randomly")
-		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
+	if i == 14:
+		randX = random.randint(-70, 70)
+		randY = random.randint(-100, 100)
 	i = i + 1
-	if i > 100:
+	if i > 15:
 		i = 0
 """
 gameStart = True
