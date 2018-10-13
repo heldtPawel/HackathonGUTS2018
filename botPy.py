@@ -240,6 +240,51 @@ def updatePos():
 	x = message['X']
 	y = message['Y']
 
+def scan(message):
+	#main output variable, initialize with primary keys which are types of objects
+	#each type will have a dictionary for value where they store each object and in that dictionary,
+	#the keys will be id and will be mapped to its attributes
+	#the form is: scan_result = {type1: 	{id:{attr1:val, attr2:val},
+											#id2:{attr1:val, attr2:val}},
+								 #type2: 	{id3:{attr1:val, attr2:val},
+											#id4:{attr1:val, attr2:val}}}
+	scan_result = {}
+	scan_result["Tank"] = {}
+	scan_result["HealthPickup"] = {}
+	scan_result["AmmoPickup"] = {}
+	scan_result["Snitch"] = {}
+	scan_result["Emergency"] = False
+	current_heading = message["TurretHeading"]
+	print(str(our_id) + " | "+str(our_x) + " | " + str(our_y))
+	print("Start Head: "+str(current_heading))
+	for i in range(18):
+		message_in_function = GameServer.readMessage()
+		if message_in_function is None:
+			pass
+		elif "Id" in message_in_function:
+			id = message_in_function["Id"]
+			if (id != our_id):
+				type = message_in_function["Type"]
+				x = message_in_function["X"]
+				y = message_in_function["Y"]
+				dist = calculateDistance(our_x,our_y,x,y)
+
+				#for each t
+				scan_result[type][id] = {"x":x,"y":y,"dist": dist}
+
+				if type=="Tank":
+					scan_result[type][id]["hp"] = message_in_function["Health"]
+
+				if (dist <= 15):
+					scan_result["Emergency"] = True
+					break
+
+		current_heading =(current_heading + 20) % 360
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
+
+	print("End Head: " + str(current_heading))
+	return scan_result
+
 # Main loop
 gameStart = True
 gameLoaded = False
@@ -250,7 +295,8 @@ x = 0
 y = 0
 Tx = random.randint(-70,70)
 Ty = random.randint(-100,100)
-Taq = True
+
+Target = {}
 while True:
 	#lines till except continue guarantee robust start
 	message = GameServer.readMessage()
@@ -277,10 +323,8 @@ while True:
 		Ty = random.randint(-100, 100)
 	if message['Id'] == id:
 		updatePos()
-	else:
 
-		Tx = message['X']
-		Ty = message['Y']
+
 
 	fireCoord(message, Ty, Ty, x, y)
 	time.sleep(0.01)
