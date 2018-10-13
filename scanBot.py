@@ -249,6 +249,7 @@ def scan():
 
 	print("End Head: " + str(current_heading))
 	print(scan_result)
+	return scan_result
 
 
 
