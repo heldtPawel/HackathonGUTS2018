@@ -7,8 +7,7 @@ import binascii
 import struct
 import argparse
 import random
-import math   #needed for math fns
-import time
+import math
 
 
 class ServerMessageTypes(object):
@@ -132,7 +131,7 @@ class ServerComms(object):
 		if messageType is not None:
 			message.append(messageType)
 		else:
-			message.append(0)
+		        message.append(0)
 
 		if messagePayload is not None:
 			messageString = json.dumps(messagePayload)
@@ -159,7 +158,7 @@ args = parser.parse_args()
 
 # Set up console logging
 if args.debug:
-	logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.DEBUG)
+        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.DEBUG)
 else:
 	logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
 
@@ -170,147 +169,65 @@ GameServer = ServerComms(args.hostname, args.port)
 # Spawn our tank
 logging.info("Creating tank with name '{}'".format(args.name))
 GameServer.sendMessage(ServerMessageTypes.CREATETANK, {'Name': args.name})
-#aiming functions
-def aimAngle(message, aimHeading):
+
+#fns to calculate how many degree there is need to rotate
+def getHeading(x1, y1, x2, y2):
+        heading = math.atan2(y2 - y1, x2 - x1)
+        heading = radianToDegree(heading)
+        heading = (heading - 360) % 360
+        return math.fabs(heading)
+
+def isTurnLeft(currentHeading, desiredHeading):
+        diff = desiredHeading - currentHeading
+        if diff >= 0 and diff <= 180:
+                return True
+        else:
+                return False
+
+def radianToDegree(angle):
+    return angle * (180.0 / math.pi)
+
+#aims turret at given coordinate
+def aimCoord(message, x, y, tankX, tankY, aimHeading):
 
         if isTurnLeft(message['TurretHeading'], aimHeading):
                 logging.info("Turning turret  left")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
+                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': message['TurretHeading'] - aimHeading})
         else:
                 logging.info("Turning turret right")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
+                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading - message['TurretHeading']})
 
 def fireCoord(message,x,y):
     tankX = message['X']
     tankY = message['Y']
     aimHeading = getHeading(tankX, tankY, x, y)
-    if (abs(message['TurretHeading'] - aimHeading) < 10.0):
+    if (abs(message['Heading'] - aimHeading) < 1.0):
         logging.info("Firing")
         GameServer.sendMessage(ServerMessageTypes.FIRE)
     else:
-        aimAngle(message, aimHeading)
+        aimCoord(message, x, y, tankX, tankY, aimHeading)
 
-#math and helper functions
-
-def calculateDistance(ownX, ownY, otherX, otherY):
-	headingX = otherX - ownX
-	headingY = otherY - ownY
-	return math.sqrt((headingX * headingX) + (headingY * headingY))
-
-
-#fns to calculate how many degree there is need to rotate
-def getHeading(x1, y1, x2, y2):
-   	heading = math.atan2(y2 - y1, x2 - x1)
-   	heading = radianToDegree(heading)
-   	heading = (heading - 360) % 360
-   	return math.fabs(heading)
-
-
-def radianToDegree(angle):
-	return angle * (180.0 / math.pi)
-
-
-#definitions to invoke in main_loop
-def start(message):
-	return message['Id']
-
-
-def goToCampPoints(message, campPoints):
-	x = message['X']
-	y = message['Y']
-	heading = message['Heading']
-	#firstPart iterates over save points and look for the closest one
-	closestDist = 0
-	iPoint = 0
-	for point in campPoints:
-		distance = calculateDistance(x, y, point[0], point[1])
-		if iPoint == 0 or distance < closestDist:
-			closestDist = distance
-			closestPoint = point
-		iPoint += 1
-
-	print(point)
-
-	#second part sets tank on the right course
-	electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
-	print(electedHeading)
-
-	logging.info("Turning towards destination")
-	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
-	time.sleep(3)
-
-	#third part moves tank to that points
-	print(closestDist)
-	logging.info("Moving to point")
-	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': -closestDist})
-
-	#fourth part sets tank on the course to goal
-	 #tba
-
-
-
-
-
-# Main loop
-randX = random.randint(-70,70)
-randY = random.randint(-100,100)
-i = 0
+# Main loop - read game messages, ignore them and randomly perform actions
+i=0
+randX = random.randint(0,100)
+randY = random.randint(0,70)
 while True:
-	message = GameServer.readMessage()
-	print(message)
-	print(str(randX) + str(randY))
-	#fireCoord(message,randX,randY)
-	if i == 14:
-		randX = random.randint(-70, 70)
-		randY = random.randint(-100, 100)
-	i = i + 1
-	if i > 15:
-		i = 0
-"""
-gameStart = True
-campPoints = [[15,90]]#[[0,100], [0,-100]]
-message = {}
-i = 0
-while True:
-	message = GameServer.readMessage()
-	print("here")
-
-
-
-	if message != {} and gameStart:
-		id = start(message)
-		messageTemp = message
-#		print(messageTemp)
-		gameStart = False
-
-
-
-#	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 90})
-	#print(message)
-
-#	if id not in message and message["Type"] == "Tank":
-#		print(getHeading(messageTemp['X'], messageTemp['Y'], message['X'], message['Y']))
-#		print("above get heading result")
-
-
-	#id = start(message)
-
-	#goToCampPoints(messageTemp, campPoints)
-
-	#time.sleep(1000)
-
-
-
-	#
-	#if i == 5:
-		#if random.randint(0, 10) > 5:
-			#pass
-			#logging.info("Firing")
-			#GameServer.sendMessage(ServerMessageTypes.FIRE)
-	#elif i == 10:
-		#logging.info("Turning randomly")
-		#GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(0, 359)})
-	#elif i == 15:
-	#	logging.info("Moving randomly")
-	#	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
+    message = GameServer.readMessage()
+    print(message)
+    #logging.info("Turning turret  ")
+    #GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 0.5 - message['TurretHeading'] })
+    """
+    fireCoord(message,0,0)
+    if i == 5:
+        randX = random.randint(0, 100)
+        randY = random.randint(0, 70)
+    elif i == 10:
+        logging.info("Turning randomly")
+        GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(0, 359)})
+    elif i == 15:
+        logging.info("Moving randomly")
+        GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
+    i = i + 1
+    if i > 20:
+        i = 0
 """
