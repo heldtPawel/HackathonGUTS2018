@@ -8,6 +8,7 @@ import struct
 import argparse
 import random
 import math   #needed for math fns
+import time
 
 
 class ServerMessageTypes(object):
@@ -190,14 +191,6 @@ def radianToDegree(angle):
 	return angle * (180.0 / math.pi)
 
 
-def isTurnLeft(currentHeading, desiredHeading):
-	diff = desiredHeading - currentHeading
-	if diff >= 0 and diff <= 180:
-		return True
-	else:
-		return False
-
-
 #definitions to invoke in main_loop
 def start(message):
 	return message['Id']
@@ -206,28 +199,29 @@ def start(message):
 def goToCampPoints(message, campPoints):
 	x = message['X']
 	y = message['Y']
+	heading = message['Heading']
 	#firstPart iterates over save points and look for the closest one
 	closestDist = 0
 	iPoint = 0
 	for point in campPoints:
-		print(point)
 		distance = calculateDistance(x, y, point[0], point[1])
 		if iPoint == 0 or distance < closestDist:
 			closestDist = distance
 			closestPoint = point
 		iPoint += 1
-	#print(closestPoint)#+" distance is " + str(closestDist))
+
+	print(point)
+
 	#second part sets tank on the right course
 	electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
+	print(electedHeading)
 
-	if isTurnLeft(message['Heading'], electedHeading):
-		logging.info("Turning left")
-		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': message['Heading'] - electedHeading})
-	else:
-		logging.info("Turning right")
-		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': electedHeading - message['Heading']})
+	logging.info("Turning towards destination")
+	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
+	time.sleep(3)
 
 	#third part moves tank to that points
+	print(closestDist)
 	logging.info("Moving to point")
 	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': closestDist})
 
@@ -240,17 +234,38 @@ def goToCampPoints(message, campPoints):
 
 # Main loop - read game messages, ignore them and randomly perform actions
 gameStart = True
-campPoints = [[0,100], [0,-100]]
+campPoints = [[15,90]]#[[0,100], [0,-100]]
 message = {}
+
 while True:
 	message = GameServer.readMessage()
-	print("here")
+	print(message)
+
 	if message != {} and gameStart:
-		#print("here")
 		id = start(message)
-		goToCampPoints(message, campPoints)
+		messageTemp = message
+#		print(messageTemp)
 		gameStart = False
-	#print("\nllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll\n")
+
+
+
+#	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 90})
+	#print(message)
+
+#	if id not in message and message["Type"] == "Tank":
+#		print(getHeading(messageTemp['X'], messageTemp['Y'], message['X'], message['Y']))
+#		print("above get heading result")
+
+
+	#id = start(message)
+
+	#goToCampPoints(messageTemp, campPoints)
+
+	#time.sleep(1000)
+
+
+
+	#
 	#if i == 5:
 		#if random.randint(0, 10) > 5:
 			#pass
