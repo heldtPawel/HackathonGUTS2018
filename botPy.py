@@ -330,6 +330,7 @@ while True:
 		scan_result = scan()
 		if scan_result["Tank"] != {}:
 			for tank in scan_result["Tank"]:
+				print("This tank:")
 				print(tank)
 
 	time.sleep(0.01)
