@@ -335,6 +335,23 @@ def got_shot():
 		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
 		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
 
+def pick_up_health(scan_out,messageServer):
+	if scan_out["HealthPickup"]:
+		flag=False
+		outer_list=[]
+		for k, v in scan_out["HealthPickup"].items():
+			print("key: {0}, value: {1}".format(k, v))
+
+			inner_list=[]
+
+			inner_list.append(v["x"])
+			inner_list.append(v["y"])
+			outer_list.append(inner_list)
+		for l in outer_list:
+			if calculateDistance(messageServer["X"],messageServer["Y"],l[0],l[1])<60:
+				flag = True
+		if flag:
+			goToForLists(messageServer["X"],messageServer["Y"],outer_list)
 
 #getting our tank id
 messageTemp = GameServer.readMessage()
@@ -360,14 +377,18 @@ def main():
 	iMain = 15
 	while True:
 		#time.sleep(100)
-		if (iMain % 15)==0:
+		if (iMain % 3)==0:
 			scan_out = scan()
 			#print(scan_out)
 		iMain+=1
 		time.sleep(1)
 
+		if messageServer["Health"] <6:
+			pick_up_health(scan_out, messageServer)
+
+
+
 '''
-		print(scan_out)
 		if messageServer["Health"] <6:
 			print("here")
 			print(scan_out["HealthPickup"])
@@ -383,8 +404,8 @@ def main():
 					outer_list.append([inner_list])
 				print(outer_list)
 				goToForLists(x,y,outer_list)
-'''
-		'''
+
+
 		if safePos == False:
 			goToCampPoints(x,y,campPoints)
 			print("safe pos reached")
