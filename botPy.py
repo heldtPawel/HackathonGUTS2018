@@ -306,7 +306,7 @@ has_target = False
 Target = {}
 while True:
 	#lines till except continue guarantee robust start
-
+	print("test")
 	if GameServer.readMessage()[1]==18:
 		message = GameServer.readMessage()[0]
 
@@ -314,7 +314,7 @@ while True:
 		got_shot()
 
 
-	print(message)
+	#print(message)
 
 
 
@@ -331,6 +331,7 @@ while True:
 			gameLoaded = True
 			print("gameLoaded")
 		else:
+			print("fuck sake")
 			continue
 	except:
 		print("waiting for data")
@@ -348,6 +349,7 @@ while True:
 		scan_result = scan()
 
 		if scan_result["Tank"] != {}:
+			print("detectank")
 			for tank in scan_result["Tank"]:
 				print(tank)
 
@@ -361,7 +363,7 @@ while True:
 	i += 1
 	if i > 10:
 		i = 0
-
+	print(i)
 '''
 randX = random.randint(-70,70)
 randY = random.randint(-100,100)
