@@ -228,7 +228,7 @@ def goToCampPoints(x, y, campPoints):
 
 	logging.info("Turning towards destination")
 	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
-	time.sleep(3)
+	time.sleep(0.01)
 
 	#third part moves tank to that points
 
@@ -334,7 +334,7 @@ def scan():
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
-	current_heading = our_heading
+	current_heading = heading
 	print(str(id) + " | "+str(x) + " | " + str(y))
 	print("Start Head: "+str(current_heading))
 	for i in range(18):
@@ -380,10 +380,19 @@ idTank = GameServer.readMessage()[0]['Id']
 def readServer():
 	global messageServer
 	while True:
+<<<<<<< HEAD
 		try:
 			messageServer = GameServer.readMessage()[0]
 		except:
 			continue
+=======
+		if GameServer.readMessage()[1] == 18:
+			messageServer = GameServer.readMessage()[0]
+			mostRecentMessage = messageServer
+
+		if GameServer.readMessage()[1] == 27:
+			got_shot()
+>>>>>>> 0553ba6ecd61444c1319aa0d5fa474a26ad53aa6
 
 
 def main():
@@ -411,7 +420,11 @@ def main():
 		continue
 		#lines till except continue guarantee robust start
 		#print("here")
-		message = GameServer.readMessage()
+		if GameServer.readMessage()[1] == 18:
+			messageServer = GameServer.readMessage()[0]
+
+		if GameServer.readMessage()[1] == 27:
+			got_shot()
 		print(message)
 
 		if message != {} and gameStart:
@@ -420,17 +433,23 @@ def main():
 			print("firstMessageRecieved")
 
 
+
 		try:
 			if gameLoaded == False and message["Id"] == id and message['X'] != 0:
 				y = message['Y']
 				x = message['X']
-				gameLoad = True
+				gameLoaded = True
 				print("gameLoaded")
-			else:
+			elif gameLoaded == False:
 				continue
 		except:
 			print("waiting for data")
 			continue
+
+		if 'Id' in mostRecentMessage and mostRecentMessage['Id'] != id:
+			fireCoord(mostRecentMessage,x,y,mostRecentMessage['X'], mostRecentMessage['Y'])
+		else:
+			scan()
 
 		#here we should start applying multithreading
 		#print(str(x) + " <- x, y -> " + str(y))
@@ -438,8 +457,15 @@ def main():
 			goToCampPoints(x,y,campPoints)
 			print("safe pos reached")
 			while True:
-				message = GameServer.readMessage()
-				print(message)
+
+				if GameServer.readMessage()[1] == 18:
+					messageServer = GameServer.readMessage()[0]
+					mostRecentMessage = messageServer
+
+				if GameServer.readMessage()[1] == 27:
+					got_shot()
+
+
 			safePos = True
 		print("main loop iter" + str(iMain))
 		#time.sleep(100)
@@ -476,14 +502,26 @@ has_target = False
 Target = {}
 while True:
 	#lines till except continue guarantee robust start
+<<<<<<< HEAD
+	print("test")
+=======
 	print(GameServer.readMessage()[1])
+>>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 	if GameServer.readMessage()[1]==18:
 		message = GameServer.readMessage()[0]
 
 	if GameServer.readMessage()[1]==27:
+<<<<<<< HEAD
+		got_shot()
+
+
+	#print(message)
+
+=======
 		print("got shot!!!")
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
 		#got_shot()
+>>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 
 
 
@@ -492,15 +530,33 @@ while True:
 		gameStart = False
 		print("firstMessageReceived")
 
+<<<<<<< HEAD
+
+	try:
+		if gameLoaded == False and message["Id"] == id and message['X'] != 0:
+			updatePos()
+			gameLoaded = True
+			print("gameLoaded")
+		else:
+			print("fuck sake")
+			continue
+	except:
+		print("waiting for data")
+		continue
+
+=======
+>>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 	if message['Id'] == id:
 		updatePos()
 
 	if has_target:
 		fireCoord(message, Ty, Ty, x, y)
 	else:
+		print("ney")
 		scan_result = scan()
 
 		if scan_result["Tank"] != {}:
+			print("detectank")
 			for tank in scan_result["Tank"]:
 				print(tank)
 
@@ -513,6 +569,10 @@ while True:
 	i += 1
 	if i > 10:
 		i = 0
+<<<<<<< HEAD
+	print(i)
+=======
+>>>>>>> 4c2ef98c1eab812e51eb8c468f402c4e8de287bf
 '''
 
 '''
