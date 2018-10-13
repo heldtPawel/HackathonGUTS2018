@@ -206,7 +206,7 @@ our_y = 0;
 our_heading = 0;
 
 
-def scan(message):
+def scan():
 	#main output variable, initialize with primary keys which are types of objects
 	#each type will have a dictionary for value where they store each object and in that dictionary,
 	#the keys will be id and will be mapped to its attributes
@@ -220,7 +220,7 @@ def scan(message):
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
-	current_heading = message["TurretHeading"]
+	current_heading = our_heading
 	print(str(our_id) + " | "+str(our_x) + " | " + str(our_y))
 	print("Start Head: "+str(current_heading))
 	for i in range(18):
@@ -240,10 +240,9 @@ def scan(message):
 
 				if type=="Tank":
 					scan_result[type][id]["hp"] = message_in_function["Health"]
-
-				if (dist <= 15):
-					scan_result["Emergency"] = True
-					break
+					if (dist <= 15):
+						scan_result["Emergency"] = True
+						break
 
 		current_heading =(current_heading + 20) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
@@ -273,6 +272,6 @@ while True:
 
 				if (i % 20)==0:
 					logging.info("scanning")
-					scan(message)
+					scan()
 
 	i+=1
