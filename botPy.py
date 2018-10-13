@@ -370,58 +370,21 @@ def got_shot():
 		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
 
-#math and helper functions
 
-def get_x(message):
-	return(message['X'])
+#getting our tank id
+global idTank
+idTank = GameServer.readMessage()[0]['Id']
 
-def get_y(message):
-	return(message['Y'])
 
-def get_heading(message):
-	return(message['Heading'])
-
-def get_turretHeading(message):
-	return(message['TurretHeading'])
-
-def get_health(message):
-	return(message['Helth'])
-
-def get_ammo(message):
-	return(message['Ammo'])
-#global messageServer
 
 def readServer():
-	global mostRecentMessage
-	global id
-	global x
-	global y
-	global heading
-	global turretHeading
-	global health
-	global ammo
-
-	#first iteration
-	if GameServer.readMessage()[1] == 18:
-		messageServer = GameServer.readMessage()[0]
-		mostRecentMessage = messageServer
-
-	if GameServer.readMessage()[1] == 27:
-		got_shot()
-
-
+	global messageServer
 	while True:
 		try:
-			messageServer = GameServer.readMessage()
-			mostRecentMessage = messageServer
-			#print("most_recent_loaded")
+			messageServer = GameServer.readMessage()[0]
 		except:
-			#print("noMessage")
 			continue
 
-		#messageServer = GameServer.readMessage()
-		#print(messageServer)
-		#return messageServer
 
 def main():
 	# Main loop
@@ -435,17 +398,16 @@ def main():
 	safePos = False
 
 	while True:
-		print('move')
-		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
+		#print('move')
+		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
 		try:
-			print("llllllllllllllllllllllllllllllllll")
-			print(get_x(mostRecentMessage))
-			print(get_y(mostRecentMessage))
-			print("uuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
+			pass
+
+
 
 		except:
-			pass
-		time.sleep(2)
+			continue
+		time.sleep(1)
 		continue
 		#lines till except continue guarantee robust start
 		#print("here")
@@ -484,11 +446,20 @@ def main():
 		iMain += 1
 
 
+def movement():
+	while True:
+		print('move')
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
+		time.sleep(7)
+
+
 t1 = threading.Thread(target=readServer)
 t2 = threading.Thread(target=main)
+t3 = threading.Thread(target=movement)
 
 t1.start()
 t2.start()
+t3.start()
 '''
 # Main loop
 gameStart = True
