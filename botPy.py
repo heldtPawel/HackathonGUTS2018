@@ -174,14 +174,14 @@ def aimAngle(message, aimHeading):
 
         if isTurnLeft(message['TurretHeading'], aimHeading):
                 logging.info("Turning turret  left")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
+                #GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
         else:
                 logging.info("Turning turret right")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
+        GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
 
-def fireCoord(message,x,y):
-    tankX = message['X']
-    tankY = message['Y']
+def fireCoord(message, x, y, Tx, Ty):
+    tankX = Tx
+    tankY = Ty
     aimHeading = getHeading(tankX, tankY, x, y)
     if (abs(message['TurretHeading'] - aimHeading) < 10.0):
         logging.info("Firing")
@@ -254,23 +254,34 @@ def goToCampPoints(message, campPoints):
 	 #tba
 
 
-
-
+def updatePos():
+	Tx = message['X']
+	Ty = message['Y']
 
 # Main loop
 randX = random.randint(-70,70)
 randY = random.randint(-100,100)
 i = 0
+message = GameServer.readMessage()
+Tx = 0
+Ty = 0
+our_id = 0
+target_x = 0
+target_y = 0
 while True:
+	#print("---")
 	message = GameServer.readMessage()
-	print(message)
-	print(str(randX) + str(randY))
-	#fireCoord(message,randX,randY)
+	#GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': i})
+	if message['Id'] == our_id:
+		updatePos()
+	else:
+
+	fireCoord(message,0,0, Tx, Ty)
 	if i == 14:
 		randX = random.randint(-70, 70)
 		randY = random.randint(-100, 100)
-	i = i + 1
-	if i > 15:
+	i = i + 10
+	if i > 359:
 		i = 0
 """
 gameStart = True
