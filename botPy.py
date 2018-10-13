@@ -9,6 +9,8 @@ import argparse
 import random
 import math   #needed for math fns
 import time
+import threading
+
 
 
 class ServerMessageTypes(object):
@@ -110,11 +112,12 @@ class ServerComms(object):
 
 		if messageLen == 0:
 			messageData = bytearray()
-			messagePayload = None
+			messagePayload = {'messageType': messageType}
 		else:
 			messageData = self.ServerSocket.recv(messageLen)
 			logging.debug("*** {}".format(messageData))
 			messagePayload = json.loads(messageData.decode('utf-8'))
+			messagePayload['messageType'] = messageType
 
 		logging.debug('Turned message {} into type {} payload {}'.format(
 			binascii.hexlify(messageData),
@@ -173,22 +176,16 @@ GameServer.sendMessage(ServerMessageTypes.CREATETANK, {'Name': args.name})
 #aiming functions
 def aimAngle(message, aimHeading):
 
-        if isTurnLeft(message['TurretHeading'], aimHeading):
-                logging.info("Turning turret  left")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
-        else:
-                logging.info("Turning turret right")
-                GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
+	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
 
-def fireCoord(message,x,y):
-    tankX = message['X']
-    tankY = message['Y']
-    aimHeading = getHeading(tankX, tankY, x, y)
-    if (abs(message['TurretHeading'] - aimHeading) < 10.0):
-        logging.info("Firing")
-        GameServer.sendMessage(ServerMessageTypes.FIRE)
-    else:
-        aimAngle(message, aimHeading)
+def fireCoord(message, x, y, Tx, Ty):
+	print("THis should print")
+	aimHeading = getHeading(x, y, Tx, Ty)
+	if (abs(message['TurretHeading'] - aimHeading) < 10.0):
+		logging.info("Firing")
+		GameServer.sendMessage(ServerMessageTypes.FIRE)
+	else:
+		aimAngle(message, aimHeading)
 
 #math and helper functions
 
@@ -200,10 +197,10 @@ def calculateDistance(ownX, ownY, otherX, otherY):
 
 #fns to calculate how many degree there is need to rotate
 def getHeading(x1, y1, x2, y2):
-   	heading = math.atan2(y2 - y1, x2 - x1)
-   	heading = radianToDegree(heading)
-   	heading = (heading - 360) % 360
-   	return math.fabs(heading)
+	heading = math.atan2(y2 - y1, x2 - x1)
+	heading = radianToDegree(heading)
+	heading = (heading - 360) % 360
+	return math.fabs(heading)
 
 
 def radianToDegree(angle):
@@ -240,11 +237,236 @@ def goToCampPoints(x, y, campPoints):
 
 	#fourth part sets tank on the course to goal
 	 #tba
+'''
+def goToCampPoints(x, y, campPoints):
+	#firstPart iterates over save points and look for the closest one
+
+	closestDist = 0
+	iPoint = 0
+	for point in campPoints:
+		distance = calculateDistance(x, y, point[0], point[1])
+		if iPoint == 0 or distance < closestDist:
+			closestDist = distance
+			closestPoint = point
+		iPoint += 1
+
+
+	#zigzagging towards destination
+
+	print(point)
+	i = 0
+	exit = False
+	while (math.fabs(point[0] - x) > 20 and math.fabs(point[1] - y) > 20) or exit == False:
+		print("here")
+		print(math.fabs(point[0] - x))
+		print(math.fabs(point[1] - y))
+		electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
+		logging.info("Turning towards destination (with zigzag)")
+		if i%2 == 0:
+			print("left")
+			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading - 45})
+		else:
+			print("right")
+			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading + 45})
+		time.sleep(2)
+		logging.info("Moving to point")
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
+		print(str(x) + " <- x, Abovey -> " + str(y))
+		#navMes = GameServer.readMessage()
+		if True:#i % 2 == 0:
+			navMesCorrect = False
+			iNav = 0
+			while navMesCorrect == False or iNav >=5:
+				navMes = GameServer.readMessage()
+				print("navLoop")
+				iNav += 1
+				try:
+					if navMes['Id'] == id:
+						print("navMesRecieved")
+						print(navMes)
+						x = navMes['X']
+						y = navMes['Y']
+						print(str(x) + " <- x, Belov y -> " + str(y))
+						navMesCorrect = True
+						electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
+					else:
+						if iNav >= 5:
+							GameServer.sendMessage(ServerMessageTypes.STOPMOVE)
+							exit = True
+							print("exit")
+							break
+						continue
+				except:
+					if iNav >= 5:
+						GameServer.sendMessage(ServerMessageTypes.STOPMOVE)
+						print("exit")
+						exit = True
+						break
+					continue
+
+
+		i += 1
+		print(str(i) + "is i")
+		time.sleep(1)
 
 
 
+	#fourth part sets tank on the course to goal
+	 #tba
+'''
+
+def updatePos():
+	x = message['X']
+	y = message['Y']
+	our_heading = message['Heading']
+
+def scan():
+	#main output variable, initialize with primary keys which are types of objects
+	#each type will have a dictionary for value where they store each object and in that dictionary,
+	#the keys will be id and will be mapped to its attributes
+	#the form is: scan_result = {type1: 	{id:{attr1:val, attr2:val},
+											#id2:{attr1:val, attr2:val}},
+								 #type2: 	{id3:{attr1:val, attr2:val},
+											#id4:{attr1:val, attr2:val}}}
+	scan_result = {}
+	scan_result["Tank"] = {}
+	scan_result["HealthPickup"] = {}
+	scan_result["AmmoPickup"] = {}
+	scan_result["Snitch"] = {}
+	scan_result["Emergency"] = False
+	current_heading = our_heading
+	print(str(id) + " | "+str(x) + " | " + str(y))
+	print("Start Head: "+str(current_heading))
+	for i in range(18):
+		message_in_function = GameServer.readMessage()[0]
+		if message_in_function is None:
+			pass
+		elif "Id" in message_in_function:
+			t_id = message_in_function["Id"]
+			if (t_id != id):
+				type = message_in_function["Type"]
+				t_x = message_in_function["X"]
+				t_y = message_in_function["Y"]
+				dist = calculateDistance(x,y,t_x,t_y)
+
+				#for each t
+				scan_result[type][t_id] = {"x":t_x,"y":t_y,"dist": dist}
+
+				if type=="Tank":
+					scan_result[type][t_id]["hp"] = message_in_function["Health"]
+					if (dist <= 15):
+						scan_result["Emergency"] = True
+						break
+
+		current_heading =(current_heading + 20) % 360
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
+
+	print("End Head: " + str(current_heading))
+	return scan_result
 
 
+def got_shot():
+	for i in range(1,3):
+		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
+
+#math and helper functions
+
+
+#global messageServer
+
+def readServer():
+	global mostRecentMessage
+	global id
+	global x
+	global y
+	global heading
+	global turretHeading
+	global health
+	global ammo
+
+	#first iteration
+	messageServer = GameServer.readMessage()
+	mostRecentMessage = messageServer
+	while True:
+		try:
+			messageServer = GameServer.readMessage()
+			mostRecentMessage = messageServer
+			#print("most_recent_loaded")
+		except:
+			#print("noMessage")
+			continue
+
+		#messageServer = GameServer.readMessage()
+		#print(messageServer)
+		#return messageServer
+
+def main():
+	# Main loop
+	gameStart = True
+	gameLoaded = False
+	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
+	message = {}
+	iMain = 0
+	x = 0
+	y = 0
+	safePos = False
+
+	while True:
+		print('move')
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
+		try:
+			print("llllllllllllllllllllllllllllllllll")
+			print(mostRecentMessage)
+			print("uuuuuuuuuuuuuuuuuuuuuuuuuuuuu")
+
+		except:
+			pass
+		time.sleep(2)
+		continue
+		#lines till except continue guarantee robust start
+		#print("here")
+		message = GameServer.readMessage()
+		print(message)
+
+		if message != {} and gameStart:
+			id = start(message)
+			gameStart = False
+			print("firstMessageRecieved")
+
+
+		try:
+			if gameLoaded == False and message["Id"] == id and message['X'] != 0:
+				y = message['Y']
+				x = message['X']
+				gameLoad = True
+				print("gameLoaded")
+			else:
+				continue
+		except:
+			print("waiting for data")
+			continue
+
+		#here we should start applying multithreading
+		#print(str(x) + " <- x, y -> " + str(y))
+		if safePos == False:
+			goToCampPoints(x,y,campPoints)
+			print("safe pos reached")
+			while True:
+				message = GameServer.readMessage()
+				print(message)
+			safePos = True
+		print("main loop iter" + str(iMain))
+		#time.sleep(100)
+		iMain += 1
+
+
+t1 = threading.Thread(target=readServer)
+t2 = threading.Thread(target=main)
+
+t1.start()
+t2.start()
+'''
 # Main loop
 gameStart = True
 gameLoaded = False
@@ -253,94 +475,112 @@ message = {}
 i = 0
 x = 0
 y = 0
+Tx = random.randint(-70,70)
+Ty = random.randint(-100,100)
+our_heading = 0
+has_target = False
+Target = {}
 while True:
 	#lines till except continue guarantee robust start
-	message = GameServer.readMessage()
-	print(message)
+	print(GameServer.readMessage()[1])
+	if GameServer.readMessage()[1]==18:
+		message = GameServer.readMessage()[0]
 
-	if message != {} and gameStart:
+	if GameServer.readMessage()[1]==27:
+		print("got shot!!!")
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
+		#got_shot()
+
+
+
+	if gameStart:
 		id = start(message)
 		gameStart = False
-		print("firstMessageRecieved")
+		print("firstMessageReceived")
 
+	if message['Id'] == id:
+		updatePos()
 
-	try:
-		if gameLoaded == False and message["Id"] == id and message['X'] != 0:
-			y = message['Y']
-			x = message['X']
-			gameLoad = True
-			print("gameLoaded")
-		else:
-			continue
-	except:
-		print("waiting for data")
-		continue
+	if has_target:
+		fireCoord(message, Ty, Ty, x, y)
+	else:
+		scan_result = scan()
 
+		if scan_result["Tank"] != {}:
+			for tank in scan_result["Tank"]:
+				print(tank)
+
+	time.sleep(0.01)
 	#here we should start applying multithreading
 	print(str(x) + " <- x, y -> " + str(y))
-	goToCampPoints(x,y,campPoints)
-	time.sleep(100)
+	#goToCampPoints(x,y,campPoints)
+
+
 	i += 1
-'''
-randX = random.randint(-70,70)
-randY = random.randint(-100,100)
-i = 0
-while True:
-	message = GameServer.readMessage()
-	print(message)
-	print(str(randX) + str(randY))
-	#fireCoord(message,randX,randY)
-	if i == 14:
-		randX = random.randint(-70, 70)
-		randY = random.randint(-100, 100)
-	i = i + 1
-	if i > 15:
+	if i > 10:
 		i = 0
-"""
-gameStart = True
-campPoints = [[15,90]]#[[0,100], [0,-100]]
-message = {}
-i = 0
-while True:
-	message = GameServer.readMessage()
-	print("here")
+'''
+
+'''
+	randX = random.randint(-70,70)
+	randY = random.randint(-100,100)
+	i = 0
+	while True:
+		message = GameServer.readMessage()
+		print(message)
+		print(str(randX) + str(randY))
+		#fireCoord(message,randX,randY)
+		if i == 14:
+			randX = random.randint(-70, 70)
+			randY = random.randint(-100, 100)
+		i = i + 1
+		if i > 15:
+			i = 0
+	"""
+	gameStart = True
+	campPoints = [[15,90]]#[[0,100], [0,-100]]
+	message = {}
+	i = 0
+	while True:
+		message = GameServer.readMessage()
+		print("here")
 
 
 
-	if message != {} and gameStart:
-		id = start(message)
-		messageTemp = message
-#		print(messageTemp)
-		gameStart = False
+		if message != {} and gameStart:
+			id = start(message)
+			messageTemp = message
+	#		print(messageTemp)
+			gameStart = False
 
 
 
-#	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 90})
-	#print(message)
+	#	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 90})
+		#print(message)
 
-#	if id not in message and message["Type"] == "Tank":
-#		print(getHeading(messageTemp['X'], messageTemp['Y'], message['X'], message['Y']))
-#		print("above get heading result")
-
-
-	#id = start(message)
-
-	#goToCampPoints(messageTemp, campPoints)
-
-	#time.sleep(1000)
+	#	if id not in message and message["Type"] == "Tank":
+	#		print(getHeading(messageTemp['X'], messageTemp['Y'], message['X'], message['Y']))
+	#		print("above get heading result")
 
 
+		#id = start(message)
 
-	#
-	#if i == 5:
-		#if random.randint(0, 10) > 5:
-			#pass
-			#logging.info("Firing")
-			#GameServer.sendMessage(ServerMessageTypes.FIRE)
-	#elif i == 10:
-		#logging.info("Turning randomly")
-		#GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(0, 359)})
-	#elif i == 15:
-	#	logging.info("Moving randomly")
-	#	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
+		#goToCampPoints(messageTemp, campPoints)
+
+		#time.sleep(1000)
+
+
+
+		#
+		#if i == 5:
+			#if random.randint(0, 10) > 5:
+				#pass
+				#logging.info("Firing")
+				#GameServer.sendMessage(ServerMessageTypes.FIRE)
+		#elif i == 10:
+			#logging.info("Turning randomly")
+			#GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(0, 359)})
+		#elif i == 15:
+		#	logging.info("Moving randomly")
+		#	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
 '''
