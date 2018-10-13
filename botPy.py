@@ -120,7 +120,7 @@ class ServerComms(object):
 			binascii.hexlify(messageData),
 			self.MessageTypes.toString(messageType),
 			messagePayload))
-		return messagePayload
+		return messagePayload, messageType
 
 	def sendMessage(self, messageType=None, messagePayload=None):
 		'''
@@ -285,6 +285,12 @@ def scan():
 	print("End Head: " + str(current_heading))
 	return scan_result
 
+
+def got_shot():
+	for i in range(1,3):
+		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
+
 # Main loop
 gameStart = True
 gameLoaded = False
@@ -300,7 +306,13 @@ has_target = False
 Target = {}
 while True:
 	#lines till except continue guarantee robust start
-	message = GameServer.readMessage()
+
+	if GameServer.readMessage()[1]==18:
+		message = GameServer.readMessage()[0]
+
+	if GameServer.readMessage()[1]==27:
+		got_shot()
+		
 	print(message)
 
 	if message != {} and gameStart:
