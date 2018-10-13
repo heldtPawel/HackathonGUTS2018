@@ -173,22 +173,16 @@ GameServer.sendMessage(ServerMessageTypes.CREATETANK, {'Name': args.name})
 #aiming functions
 def aimAngle(message, aimHeading):
 
-        if isTurnLeft(message['TurretHeading'], aimHeading):
-                logging.info("Turning turret  left")
-                #GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': aimHeading})
-        else:
-                logging.info("Turning turret right")
-        GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
+	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
 
 def fireCoord(message, x, y, Tx, Ty):
-    tankX = Tx
-    tankY = Ty
-    aimHeading = getHeading(tankX, tankY, x, y)
-    if (abs(message['TurretHeading'] - aimHeading) < 10.0):
-        logging.info("Firing")
-        GameServer.sendMessage(ServerMessageTypes.FIRE)
-    else:
-        aimAngle(message, aimHeading)
+	print("THis should print")
+	aimHeading = getHeading(x, y, Tx, Ty)
+	if (abs(message['TurretHeading'] - aimHeading) < 10.0):
+		logging.info("Firing")
+		GameServer.sendMessage(ServerMessageTypes.FIRE)
+	else:
+		aimAngle(message, aimHeading)
 
 #math and helper functions
 
@@ -200,10 +194,10 @@ def calculateDistance(ownX, ownY, otherX, otherY):
 
 #fns to calculate how many degree there is need to rotate
 def getHeading(x1, y1, x2, y2):
-   	heading = math.atan2(y2 - y1, x2 - x1)
-   	heading = radianToDegree(heading)
-   	heading = (heading - 360) % 360
-   	return math.fabs(heading)
+	heading = math.atan2(y2 - y1, x2 - x1)
+	heading = radianToDegree(heading)
+	heading = (heading - 360) % 360
+	return math.fabs(heading)
 
 
 def radianToDegree(angle):
@@ -243,8 +237,8 @@ def goToCampPoints(x, y, campPoints):
 
 
 def updatePos():
-	Tx = message['X']
-	Ty = message['Y']
+	x = message['X']
+	y = message['Y']
 
 # Main loop
 gameStart = True
@@ -254,6 +248,9 @@ message = {}
 i = 0
 x = 0
 y = 0
+Tx = random.randint(-70,70)
+Ty = random.randint(-100,100)
+Taq = True
 while True:
 	#lines till except continue guarantee robust start
 	message = GameServer.readMessage()
@@ -267,8 +264,7 @@ while True:
 
 	try:
 		if gameLoaded == False and message["Id"] == id and message['X'] != 0:
-			y = message['Y']
-			x = message['X']
+			updatePos()
 			gameLoad = True
 			print("gameLoaded")
 		else:
@@ -276,12 +272,28 @@ while True:
 	except:
 		print("waiting for data")
 		continue
+	if Taq and i == 9:
+		Tx = random.randint(-70, 70)
+		Ty = random.randint(-100, 100)
+	if message['Id'] == id:
+		updatePos()
+	else:
 
+		Tx = message['X']
+		Ty = message['Y']
+
+	fireCoord(message, Ty, Ty, x, y)
+	time.sleep(0.01)
+	print("ye")
 	#here we should start applying multithreading
 	print(str(x) + " <- x, y -> " + str(y))
 	goToCampPoints(x,y,campPoints)
-	time.sleep(100)
+
+
 	i += 1
+	if i > 10:
+		i = 0
+
 '''
 randX = random.randint(-70,70)
 randY = random.randint(-100,100)
@@ -296,7 +308,7 @@ while True:
 	#print("---")
 	message = GameServer.readMessage()
 	#GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': i})
-	if message['Id'] == our_id:
+	if message['Id'] == id:
 		updatePos()
 	else:
 
