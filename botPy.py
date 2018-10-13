@@ -230,23 +230,31 @@ def goToForLists(x, y, places):
 	i = 0
 
 	while (math.fabs(point[0] - x) > 10 and math.fabs(point[1] - y) > 10):
-		print("here")
+		#print("here")
+		if (math.fabs(point[0] - x) < 25 or math.fabs(point[1] - y) < 25):
+			print("in if")
+			electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
+			distance = calculateDistance(x, y, closestPoint[0], closestPoint[1])
+			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
+			GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 20})
+			break
 		#print(math.fabs(point[0] - x))
 		#print(math.fabs(point[1] - y))
 		electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
 		logging.info("Turning towards destination (with zigzag)")
 		if i%2 == 0:
-			print("left")
+		#	print("left")
 			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading - 45})
 		else:
-			print("right")
+		#	print("right")
 			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading + 45})
-		logging.info("Moving to point")
+		#logging.info("Moving to point")
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 20})
-		time.sleep(2.25)
+		time.sleep(2.3)
 
 		x = messageServer['X']
 		y = messageServer['Y']
+		print(str(x) + " <- x, y -> " + str(y))
 
 		i+=1
 
@@ -255,6 +263,7 @@ def updatePos():
 	x = message['X']
 	y = message['Y']
 	our_heading = message['Heading']
+
 
 def scan():
 	#main output variable, initialize with primary keys which are types of objects
@@ -323,7 +332,8 @@ def readServer():
 			serverResponse = GameServer.readMessage()
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
-				print("msg loaded")
+				print(messageServer)
+				print(time.now)
 		except:
 			continue
 
@@ -374,6 +384,7 @@ def main():
 def movement():
 	while True:
 		goToForLists(messageServer['X'], messageServer['Y'], [[15,90],[-15,90],[15,-90],[-15,-90]])
+		print("arrived")
 		if serverResponse[1] == 18:
 			pass#print("its bout me")
 		elif serverResponse[1] == 27:
