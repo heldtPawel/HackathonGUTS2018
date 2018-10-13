@@ -246,11 +246,10 @@ def goToForLists(x, y, places):
 			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading + 45})
 		logging.info("Moving to point")
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 20})
-		time.sleep(2.3)
+		time.sleep(2.25)
 
 		x = messageServer['X']
 		y = messageServer['Y']
-		print(str(x) + " <- x, y -> " + str(y))
 
 		i+=1
 
@@ -259,7 +258,6 @@ def updatePos():
 	x = message['X']
 	y = message['Y']
 	our_heading = message['Heading']
-
 
 def scan():
 	#main output variable, initialize with primary keys which are types of objects
@@ -299,10 +297,10 @@ def scan():
 					if (dist <= 15):
 						scan_result["Emergency"] = True
 						break
-		current_turret_heading =(current_turret_heading + 20) % 360
+		current_turret_heading =(current_turret_heading + 5) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
-		time.sleep(0.3)
-		if (math.fabs(current_turret_heading-initial_turret_head) < 17):
+		time.sleep(0.05)
+		if (math.fabs(current_turret_heading-initial_turret_head) < 1):
 			turn = False
 
 	print("End Head: " + str(current_turret_heading))
