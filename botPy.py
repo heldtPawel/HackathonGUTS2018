@@ -383,7 +383,7 @@ def main():
 		iMain+=1
 		time.sleep(1)
 
-		if messageServer["Health"] <6:
+		if messageServer["Health"] <3:
 			pick_up_health(scan_out, messageServer)
 
 
