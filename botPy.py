@@ -321,8 +321,9 @@ def readServer():
 	while True:
 		try:
 			serverResponse = GameServer.readMessage()
-			messageServer = serverResponse[0]
-			#print("msg loaded")
+			if serverResponse[0]['Id'] == idTank:
+				messageServer = serverResponse[0]
+				print("msg loaded")
 		except:
 			continue
 
@@ -371,19 +372,14 @@ def main():
 
 
 def movement():
-	iM = 0
 	while True:
-
-		if iM == 0:
-			print('move')
-			GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
-			print("I moved")
-			iM = 1
+		goToForLists(messageServer['X'], messageServer['Y'], [[15,90],[-15,90],[15,-90],[-15,-90]])
 		if serverResponse[1] == 18:
 			pass#print("its bout me")
 		elif serverResponse[1] == 27:
 			print("got shot")
-			got_shot()
+			#got_shot()
+		time.sleep(70)
 '''
 def movement():
 	while True:
