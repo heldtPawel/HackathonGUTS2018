@@ -257,7 +257,7 @@ def goToCampPoints(message, campPoints):
 
 
 
-# Main loop - read game messages, ignore them and randomly perform actions
+# Main loop
 randX = random.randint(-70,70)
 randY = random.randint(-100,100)
 i = 0
