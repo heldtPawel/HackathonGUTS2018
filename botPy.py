@@ -215,10 +215,7 @@ def start(message):
 	return message['Id']
 
 
-def goToCampPoints(message, campPoints):
-	x = message['X']
-	y = message['Y']
-	heading = message['Heading']
+def goToCampPoints(x, y, campPoints):
 	#firstPart iterates over save points and look for the closest one
 	closestDist = 0
 	iPoint = 0
@@ -229,20 +226,17 @@ def goToCampPoints(message, campPoints):
 			closestPoint = point
 		iPoint += 1
 
-	print(point)
-
 	#second part sets tank on the right course
 	electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
-	print(electedHeading)
 
 	logging.info("Turning towards destination")
 	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
 	time.sleep(3)
 
 	#third part moves tank to that points
-	print(closestDist)
+
 	logging.info("Moving to point")
-	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': -closestDist})
+	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': closestDist})
 
 	#fourth part sets tank on the course to goal
 	 #tba
@@ -252,6 +246,42 @@ def goToCampPoints(message, campPoints):
 
 
 # Main loop
+gameStart = True
+gameLoaded = False
+campPoints = [[15,90]]#[[0,100], [0,-100]]
+message = {}
+i = 0
+x = 0
+y = 0
+while True:
+	#lines till except continue guarantee robust start
+	message = GameServer.readMessage()
+	print(message)
+
+	if message != {} and gameStart:
+		id = start(message)
+		gameStart = False
+		print("firstMessageRecieved")
+
+
+	try:
+		if gameLoaded == False and message["Id"] == id and message['X'] != 0:
+			y = message['Y']
+			x = message['X']
+			gameLoad = True
+			print("gameLoaded")
+		else:
+			continue
+	except:
+		print("waiting for data")
+		continue
+
+	#here we should start applying multithreading
+	print(str(x) + " <- x, y -> " + str(y))
+	goToCampPoints(x,y,campPoints)
+	time.sleep(100)
+	i += 1
+'''
 randX = random.randint(-70,70)
 randY = random.randint(-100,100)
 i = 0
@@ -313,4 +343,4 @@ while True:
 	#elif i == 15:
 	#	logging.info("Moving randomly")
 	#	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
-"""
+'''
