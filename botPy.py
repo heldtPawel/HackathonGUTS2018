@@ -230,23 +230,31 @@ def goToForLists(x, y, places):
 	i = 0
 
 	while (math.fabs(point[0] - x) > 10 and math.fabs(point[1] - y) > 10):
-		print("here")
+		#print("here")
+		if (math.fabs(point[0] - x) < 25 or math.fabs(point[1] - y) < 25):
+			print("in if")
+			electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
+			distance = calculateDistance(x, y, closestPoint[0], closestPoint[1])
+			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
+			GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 20})
+			break
 		#print(math.fabs(point[0] - x))
 		#print(math.fabs(point[1] - y))
 		electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
 		logging.info("Turning towards destination (with zigzag)")
 		if i%2 == 0:
-			print("left")
+		#	print("left")
 			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading - 45})
 		else:
-			print("right")
+		#	print("right")
 			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading + 45})
-		logging.info("Moving to point")
+		#logging.info("Moving to point")
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 20})
-		time.sleep(2.25)
+		time.sleep(2.3)
 
 		x = messageServer['X']
 		y = messageServer['Y']
+		print(str(x) + " <- x, y -> " + str(y))
 
 		i+=1
 
@@ -255,6 +263,7 @@ def updatePos():
 	x = messageServer['X']
 	y = messageServer['Y']
 	turret_heading = messageServer['TurretHeading']
+
 
 def scan():
 	#main output variable, initialize with primary keys which are types of objects
@@ -270,34 +279,37 @@ def scan():
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
-	current_heading = heading
-	print(str(id) + " | "+str(x) + " | " + str(y))
-	print("Start Head: "+str(current_heading))
-	for i in range(18):
-		message_in_function = GameServer.readMessage()[0]
+	initial_turret_head = messageServer['TurretHeading']
+	current_turret_heading = messageServer['TurretHeading']
+	print("Start Head: "+str(current_turret_heading))
+	message_in_function = None
+	turn = True
+	while (turn):
+		if serverResponse[1] == 18:
+			message_in_function = serverResponse[0]
 		if message_in_function is None:
-			pass
+			continue
 		elif "Id" in message_in_function:
 			t_id = message_in_function["Id"]
-			if (t_id != id):
-				type = message_in_function["Type"]
+			if (t_id != idTank):
+				category = message_in_function["Type"]
 				t_x = message_in_function["X"]
 				t_y = message_in_function["Y"]
-				dist = calculateDistance(x,y,t_x,t_y)
-
+				dist = calculateDistance(messageServer['X'],messageServer['Y'],t_x,t_y)
 				#for each t
-				scan_result[type][t_id] = {"x":t_x,"y":t_y,"dist": dist}
-
-				if type=="Tank":
-					scan_result[type][t_id]["hp"] = message_in_function["Health"]
+				scan_result[category][t_id] = {"x":t_x,"y":t_y,"dist": dist}
+				if category=="Tank":
+					scan_result[category][t_id]["hp"] = message_in_function["Health"]
 					if (dist <= 15):
 						scan_result["Emergency"] = True
 						break
+		current_turret_heading =(current_turret_heading + 20) % 360
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
+		time.sleep(0.3)
+		if (math.fabs(current_turret_heading-initial_turret_head) < 17):
+			turn = False
 
-		current_heading =(current_heading + 20) % 360
-		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
-
-	print("End Head: " + str(current_heading))
+	print("End Head: " + str(current_turret_heading))
 	return scan_result
 
 
@@ -323,8 +335,13 @@ def readServer():
 			serverResponse = GameServer.readMessage()
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
+<<<<<<< HEAD
 				print("msg loaded")
 				print(messageServer)
+=======
+				print(messageServer)
+				print(time.now)
+>>>>>>> 96e7d310d4c52d91b4a2d3a254fdeadcfacf2bc8
 		except:
 			continue
 
@@ -344,6 +361,7 @@ def main():
 	gameLoaded = False
 	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
 	iMain = 0
+<<<<<<< HEAD
 	x = 0
 	y = 0
 	target = {}
@@ -352,7 +370,16 @@ def main():
 	while True:
 		print(messageServer)
 		print|("===")
+=======
+	safePos = False
+
+	while True:
+>>>>>>> 96e7d310d4c52d91b4a2d3a254fdeadcfacf2bc8
 		time.sleep(1)
+		if (iMain % 15)==0:
+			scan_out = scan()
+			print(scan_out)
+		iMain+=1
 		continue
 		#lines till except continue guarantee robust start
 		#print("here")
@@ -415,6 +442,7 @@ def main():
 def movement():
 	while True:
 		goToForLists(messageServer['X'], messageServer['Y'], [[15,90],[-15,90],[15,-90],[-15,-90]])
+		print("arrived")
 		if serverResponse[1] == 18:
 			pass#print("its bout me")
 		elif serverResponse[1] == 27:
@@ -440,7 +468,7 @@ t3 = threading.Thread(target=movement)
 t1.start()
 time.sleep(1)
 t2.start()
-t3.start()
+#t3.start()
 '''
 # Main loop
 gameStart = True
