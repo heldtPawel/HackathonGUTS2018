@@ -225,7 +225,7 @@ def goToCampPoints(x, y, campPoints):
 
 	logging.info("Turning towards destination")
 	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
-	time.sleep(3)
+	time.sleep(0.01)
 
 	#third part moves tank to that points
 
@@ -313,7 +313,7 @@ while True:
 	if GameServer.readMessage()[1]==27:
 		got_shot()
 		
-	print(message)
+	#print(message)
 
 	if message != {} and gameStart:
 		id = start(message)
@@ -324,7 +324,7 @@ while True:
 	try:
 		if gameLoaded == False and message["Id"] == id and message['X'] != 0:
 			updatePos()
-			gameLoad = True
+			gameLoaded = True
 			print("gameLoaded")
 		else:
 			continue
@@ -338,12 +338,13 @@ while True:
 
 	if has_target:
 		fireCoord(message, Ty, Ty, x, y)
-	else:
+	elif i == 9:
+		print("ney")
 		scan_result = scan()
 		if scan_result["Tank"] != {}:
 			for tank in scan_result["Tank"]:
 				print("This tank:")
-				print(tank)
+				#print(tank)
 
 	time.sleep(0.01)
 	print("ye")
