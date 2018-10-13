@@ -212,54 +212,27 @@ def start(message):
 	return message['Id']
 
 
-def goToCampPoints(x, y, campPoints):
+def goToForLists(x, y, places):
 	#firstPart iterates over save points and look for the closest one
+
 	closestDist = 0
 	iPoint = 0
-	for point in campPoints:
+	for point in places:
 		distance = calculateDistance(x, y, point[0], point[1])
 		if iPoint == 0 or distance < closestDist:
 			closestDist = distance
 			closestPoint = point
 		iPoint += 1
-
-	#second part sets tank on the right course
-	electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
-
-	logging.info("Turning towards destination")
-	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading})
-	time.sleep(0.01)
-
-	#third part moves tank to that points
-
-	logging.info("Moving to point")
-	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': closestDist})
-
-	#fourth part sets tank on the course to goal
-	 #tba
-'''
-def goToCampPoints(x, y, campPoints):
-	#firstPart iterates over save points and look for the closest one
-
-	closestDist = 0
-	iPoint = 0
-	for point in campPoints:
-		distance = calculateDistance(x, y, point[0], point[1])
-		if iPoint == 0 or distance < closestDist:
-			closestDist = distance
-			closestPoint = point
-		iPoint += 1
-
 
 	#zigzagging towards destination
 
 	print(point)
 	i = 0
-	exit = False
-	while (math.fabs(point[0] - x) > 20 and math.fabs(point[1] - y) > 20) or exit == False:
+
+	while (math.fabs(point[0] - x) > 10 and math.fabs(point[1] - y) > 10):
 		print("here")
-		print(math.fabs(point[0] - x))
-		print(math.fabs(point[1] - y))
+		#print(math.fabs(point[0] - x))
+		#print(math.fabs(point[1] - y))
 		electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
 		logging.info("Turning towards destination (with zigzag)")
 		if i%2 == 0:
@@ -268,52 +241,15 @@ def goToCampPoints(x, y, campPoints):
 		else:
 			print("right")
 			GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 360 - electedHeading + 45})
-		time.sleep(2)
 		logging.info("Moving to point")
-		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
-		print(str(x) + " <- x, Abovey -> " + str(y))
-		#navMes = GameServer.readMessage()
-		if True:#i % 2 == 0:
-			navMesCorrect = False
-			iNav = 0
-			while navMesCorrect == False or iNav >=5:
-				navMes = GameServer.readMessage()
-				print("navLoop")
-				iNav += 1
-				try:
-					if navMes['Id'] == id:
-						print("navMesRecieved")
-						print(navMes)
-						x = navMes['X']
-						y = navMes['Y']
-						print(str(x) + " <- x, Belov y -> " + str(y))
-						navMesCorrect = True
-						electedHeading = getHeading(x, y, closestPoint[0], closestPoint[1])
-					else:
-						if iNav >= 5:
-							GameServer.sendMessage(ServerMessageTypes.STOPMOVE)
-							exit = True
-							print("exit")
-							break
-						continue
-				except:
-					if iNav >= 5:
-						GameServer.sendMessage(ServerMessageTypes.STOPMOVE)
-						print("exit")
-						exit = True
-						break
-					continue
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 20})
+		time.sleep(2.25)
 
+		x = messageServer['X']
+		y = messageServer['Y']
 
-		i += 1
-		print(str(i) + "is i")
-		time.sleep(1)
+		i+=1
 
-
-
-	#fourth part sets tank on the course to goal
-	 #tba
-'''
 
 def updatePos():
 	x = message['X']
@@ -381,26 +317,14 @@ if messageTemp[1] == 18:
 
 def readServer():
 	global messageServer
+	global serverResponse
 	while True:
-<<<<<<< HEAD
-=======
-
->>>>>>> d00250bc5e0fbbe288059bd14d68cfd6cf0b1e44
 		try:
-			messageServer = GameServer.readMessage()[0]
+			serverResponse = GameServer.readMessage()
+			messageServer = serverResponse[0]
+			#print("msg loaded")
 		except:
 			continue
-<<<<<<< HEAD
-=======
-
-		if GameServer.readMessage()[1] == 18:
-			messageServer = GameServer.readMessage()[0]
-			mostRecentMessage = messageServer
-
-		if GameServer.readMessage()[1] == 27:
-			got_shot()
-
->>>>>>> d00250bc5e0fbbe288059bd14d68cfd6cf0b1e44
 
 
 def main():
@@ -447,17 +371,37 @@ def main():
 
 
 def movement():
+	iM = 0
+	while True:
+
+		if iM == 0:
+			print('move')
+			GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
+			print("I moved")
+			iM = 1
+		if serverResponse[1] == 18:
+			pass#print("its bout me")
+		elif serverResponse[1] == 27:
+			print("got shot")
+			got_shot()
+'''
+def movement():
 	while True:
 		print('move')
-		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
-		time.sleep(7)
+		#print(messageServer)
+		goToForLists(messageServer['X'], messageServer['Y'], [[15,90],[-15,90],[15,-90],[-15,-90]])
 
+		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
+		time.sleep(70)
+
+'''
 
 t1 = threading.Thread(target=readServer)
 t2 = threading.Thread(target=main)
 t3 = threading.Thread(target=movement)
 
 t1.start()
+time.sleep(1)
 t2.start()
 t3.start()
 '''
