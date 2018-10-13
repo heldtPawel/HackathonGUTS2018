@@ -310,6 +310,32 @@ def got_shot():
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
 
 
+def find_Shoot(has_target, target):
+	if has_target:
+		fireCoord(messageServer, target['X'], target['Y'], x, y)
+		if 'Id' in messageServer and messageServer['Id'] == target['Id']:
+			target = messageServer
+	# if target
+	else:
+		scan_result = scan()
+		if scan_result["Tank"] != {}:
+			print("detectank")
+			has_target = True
+			low_hp = 6
+			low_dist = 200
+			for tank in scan_result["Tank"]:
+				if tank['hp'] < low_hp:
+					low_hp = tank['hp']
+					target = tank
+				elif tank['hp'] == low_hp:
+					if tank['dist'] < low_dist:
+						low_dist = tank['dist']
+						target = tank
+		else:
+			has_target = False
+
+	return has_target, target
+
 #getting our tank id
 messageTemp = GameServer.readMessage()
 if messageTemp[1] == 18:
@@ -337,13 +363,18 @@ def main():
 	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
 	iMain = 0
 	safePos = False
+	has_target = False
 
 	while True:
-		time.sleep(1)
+		time.sleep(0.1)
+
+		
+
 		if (iMain % 15)==0:
 			scan_out = scan()
 			print(scan_out)
 		iMain+=1
+
 		continue
 		#lines till except continue guarantee robust start
 		#print("here")
@@ -438,16 +469,7 @@ while True:
 	if message['Id'] == id:
 		updatePos()
 
-	if has_target:
-		fireCoord(message, Ty, Ty, x, y)
-	else:
-		print("ney")
-		scan_result = scan()
-
-		if scan_result["Tank"] != {}:
-			print("detectank")
-			for tank in scan_result["Tank"]:
-				print(tank)
+	   )
 
 	time.sleep(0.01)
 	#here we should start applying multithreading
