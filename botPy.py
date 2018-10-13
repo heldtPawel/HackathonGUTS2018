@@ -382,10 +382,25 @@ if messageTemp[1] == 18:
 def readServer():
 	global messageServer
 	while True:
+<<<<<<< HEAD
+=======
+
+>>>>>>> d00250bc5e0fbbe288059bd14d68cfd6cf0b1e44
 		try:
 			messageServer = GameServer.readMessage()[0]
 		except:
 			continue
+<<<<<<< HEAD
+=======
+
+		if GameServer.readMessage()[1] == 18:
+			messageServer = GameServer.readMessage()[0]
+			mostRecentMessage = messageServer
+
+		if GameServer.readMessage()[1] == 27:
+			got_shot()
+
+>>>>>>> d00250bc5e0fbbe288059bd14d68cfd6cf0b1e44
 
 
 def main():
@@ -393,22 +408,13 @@ def main():
 	gameStart = True
 	gameLoaded = False
 	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
-	message = {}
 	iMain = 0
 	x = 0
 	y = 0
 	safePos = False
 
 	while True:
-		#print('move')
-		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
-		try:
-			pass
 
-
-
-		except:
-			continue
 		time.sleep(1)
 		continue
 		#lines till except continue guarantee robust start
@@ -418,31 +424,6 @@ def main():
 
 		if GameServer.readMessage()[1] == 27:
 			got_shot()
-		print(message)
-
-		if message != {} and gameStart:
-			id = start(message)
-			gameStart = False
-			print("firstMessageRecieved")
-
-
-
-		try:
-			if gameLoaded == False and message["Id"] == id and message['X'] != 0:
-				y = message['Y']
-				x = message['X']
-				gameLoaded = True
-				print("gameLoaded")
-			elif gameLoaded == False:
-				continue
-		except:
-			print("waiting for data")
-			continue
-
-		if 'Id' in mostRecentMessage and mostRecentMessage['Id'] != id:
-			fireCoord(mostRecentMessage,x,y,mostRecentMessage['X'], mostRecentMessage['Y'])
-		else:
-			scan()
 
 		#here we should start applying multithreading
 		#print(str(x) + " <- x, y -> " + str(y))
