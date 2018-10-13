@@ -252,9 +252,9 @@ def goToForLists(x, y, places):
 
 
 def updatePos():
-	x = message['X']
-	y = message['Y']
-	our_heading = message['Heading']
+	x = messageServer['X']
+	y = messageServer['Y']
+	turret_heading = messageServer['TurretHeading']
 
 def scan():
 	#main output variable, initialize with primary keys which are types of objects
@@ -324,9 +324,9 @@ def readServer():
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
 				print("msg loaded")
+				print(messageServer)
 		except:
 			continue
-<<<<<<< HEAD
 
 		if GameServer.readMessage()[1] == 18:
 			messageServer = GameServer.readMessage()[0]
@@ -335,8 +335,6 @@ def readServer():
 		if GameServer.readMessage()[1] == 27:
 			got_shot()
 
-=======
->>>>>>> 01f586ee0dfbe0e8c83dcf677ecf81f1f57a8730
 
 
 def main():
@@ -352,7 +350,8 @@ def main():
 	safePos = False
 
 	while True:
-
+		print(messageServer)
+		print|("===")
 		time.sleep(1)
 		continue
 		#lines till except continue guarantee robust start
@@ -368,11 +367,12 @@ def main():
 		#print(str(x) + " <- x, y -> " + str(y))
 
 
-"""
+
 		if has_target:
 			fireCoord(messageServer, target['X'], target['Y'], x, y)
 			if 'Id' in messageServer and messageServer['Id'] == target['Id']:
-				target =
+				target = messageServer
+				#if target
 		else:
 			scan_result = scan()
 			if scan_result["Tank"] != {}:
@@ -390,7 +390,7 @@ def main():
 							tank['X'], tank['Y'] = Tx, Ty
 			else:
 				has_target = False
-"""
+
 
 
 		if safePos == False:
@@ -420,7 +420,7 @@ def movement():
 		elif serverResponse[1] == 27:
 			print("got shot")
 			#got_shot()
-		time.sleep(70)
+		time.sleep(0.7)
 '''
 def movement():
 	while True:
