@@ -336,6 +336,7 @@ while True:
 
 	if message['Id'] == id:
 		updatePos()
+		"""
 		# if health drops below 3, get health points
 		if message["Health"]<=2:
 			scan_result = scan()
@@ -349,7 +350,7 @@ while True:
 			k=[l[0]]
 			goToCampPoints(x,y,k)
 
-
+"""
 
 
 
