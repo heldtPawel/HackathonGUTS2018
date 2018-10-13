@@ -110,11 +110,12 @@ class ServerComms(object):
 
 		if messageLen == 0:
 			messageData = bytearray()
-			messagePayload = None
+			messagePayload = {'messageType': messageType}
 		else:
 			messageData = self.ServerSocket.recv(messageLen)
 			logging.debug("*** {}".format(messageData))
 			messagePayload = json.loads(messageData.decode('utf-8'))
+			messagePayload['messageType'] = messageType
 
 		logging.debug('Turned message {} into type {} payload {}'.format(
 			binascii.hexlify(messageData),
@@ -199,28 +200,65 @@ def isTurnLeft(currentHeading, desiredHeading):
 def start(message):
 	return message['Id']
 
+our_id = 0;
+our_x = 0;
+our_y = 0;
+our_heading = 0;
+
 def scan(message):
-    current_heading = message['TurretHeading']
-    print("Start Head: "+str(current_heading))
-    for i in range(36):
-        current_heading =(current_heading + 10) % 360
-        GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
-    print("End Head: " + str(current_heading))
+	scan_result = {}
+	scan_result["Tank"] = {}
+	scan_result["HealthPickup"] = {}
+	scan_result["AmmoPickup"] = {}
+	scan_result["Snitch"] = {}
+	current_heading = message["TurretHeading"]
+	print(str(our_id) + " | "+str(our_x) + " | " +str(our_y) )
+	print("Start Head: "+str(current_heading))
+	for i in range(18):
+		message_in_function = GameServer.readMessage()
+		if message_in_function is None:
+			pass
+		elif "Id" in message_in_function:
+			id = message_in_function["Id"]
+			if (id != our_id):
+				type = message_in_function["Type"]
+				x = message_in_function["X"]
+				y = message_in_function["Y"]
+				scan_result[type][id] = {"x":x,"y":y,"distance":calculateDistance(our_x,our_y,x,y)}
+
+				if type=="Tank":
+					scan_result[type][id]["hp"] = message_in_function["Health"]
+
+
+		current_heading =(current_heading + 20) % 360
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_heading})
+
+	print("End Head: " + str(current_heading))
+	print(scan_result)
 
 
 # Main loop - read game messages, ignore them and randomly perform actions
 campPoints = [[0,100], [0,-100]]
 
 i=0
-our_id = 0;
+
 
 while True:
-    message = GameServer.readMessage()
-    if i == 0:
-        our_id = message['Id']
-    if 'Id' in message:
-        if (message['Id'] == our_id):
-            if (i % 15)==0:
-                logging.info("scanning")
-                scan(message)
-    i +=1
+	message = GameServer.readMessage()
+	if i == 0:
+		our_id = message['Id']
+
+	if message is None:
+		pass
+	else:
+		if 'Id' in message:
+			if (message['Id'] == our_id):
+				our_x = message['X']
+				our_y = message['Y']
+				our_heading = message['Heading']
+
+				if (i % 40)==0:
+					logging.info("scanning")
+					scan(message)
+
+	i+=1
