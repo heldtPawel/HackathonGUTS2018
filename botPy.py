@@ -343,7 +343,7 @@ def scan():
 			pass
 		elif "Id" in message_in_function:
 			t_id = message_in_function["Id"]
-			if (t_id != id):88pXMEXXyUzN4KbO
+			if (t_id != id):
 				type = message_in_function["Type"]
 				t_x = message_in_function["X"]
 				t_y = message_in_function["Y"]
@@ -461,6 +461,7 @@ def main():
 			print("firstMessageRecieved")
 
 
+
 		try:
 			if gameLoaded == False and message["Id"] == id and message['X'] != 0:
 				y = message['Y']
@@ -472,6 +473,11 @@ def main():
 		except:
 			print("waiting for data")
 			continue
+
+		if 'Id' in mostRecentMessage and mostRecentMessage['Id'] != id:
+			fireCoord(mostRecentMessage,x,y,mostRecentMessage['X'], mostRecentMessage['Y'])
+		else:
+			scan()
 
 		#here we should start applying multithreading
 		#print(str(x) + " <- x, y -> " + str(y))
