@@ -400,7 +400,6 @@ def main():
 	gameStart = True
 	gameLoaded = False
 	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
-	message = {}
 	iMain = 0
 	x = 0
 	y = 0
@@ -417,31 +416,6 @@ def main():
 
 		if GameServer.readMessage()[1] == 27:
 			got_shot()
-		print(message)
-
-		if message != {} and gameStart:
-			id = start(message)
-			gameStart = False
-			print("firstMessageRecieved")
-
-
-
-		try:
-			if gameLoaded == False and message["Id"] == id and message['X'] != 0:
-				y = message['Y']
-				x = message['X']
-				gameLoaded = True
-				print("gameLoaded")
-			elif gameLoaded == False:
-				continue
-		except:
-			print("waiting for data")
-			continue
-
-		if 'Id' in mostRecentMessage and mostRecentMessage['Id'] != id:
-			fireCoord(mostRecentMessage,x,y,mostRecentMessage['X'], mostRecentMessage['Y'])
-		else:
-			scan()
 
 		#here we should start applying multithreading
 		#print(str(x) + " <- x, y -> " + str(y))
