@@ -335,13 +335,11 @@ def readServer():
 			serverResponse = GameServer.readMessage()
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
-<<<<<<< HEAD
+
 				print("msg loaded")
 				print(messageServer)
-=======
 				print(messageServer)
 				print(time.now)
->>>>>>> 96e7d310d4c52d91b4a2d3a254fdeadcfacf2bc8
 		except:
 			continue
 
@@ -361,7 +359,6 @@ def main():
 	gameLoaded = False
 	campPoints = [[15,90],[-15,90],[15,-90],[-15,-90]]
 	iMain = 0
-<<<<<<< HEAD
 	x = 0
 	y = 0
 	target = {}
@@ -370,11 +367,9 @@ def main():
 	while True:
 		print(messageServer)
 		print|("===")
-=======
 	safePos = False
 
 	while True:
->>>>>>> 96e7d310d4c52d91b4a2d3a254fdeadcfacf2bc8
 		time.sleep(1)
 		if (iMain % 15)==0:
 			scan_out = scan()
