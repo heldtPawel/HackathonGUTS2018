@@ -213,7 +213,6 @@ def find_Shoot(has_target, target):
 
 	return has_target, target
 #math and helper functions
-
 def calculateDistance(ownX, ownY, otherX, otherY):
 	headingX = otherX - ownX
 	headingY = otherY - ownY
@@ -233,10 +232,6 @@ def radianToDegree(angle):
 
 
 #definitions to invoke in main_loop
-def start(message):
-	return message['Id']
-
-
 def goToForLists(x, y, places):
 	#firstPart iterates over save points and look for the closest one
 
@@ -278,11 +273,12 @@ def goToForLists(x, y, places):
 
 		i+=1
 
-
+'''
 def updatePos():
 	x = message['X']
 	y = message['Y']
 	our_heading = message['Heading']
+'''
 
 def scan():
 	#main output variable, initialize with primary keys which are types of objects
@@ -298,14 +294,16 @@ def scan():
 	scan_result["AmmoPickup"] = {}
 	scan_result["Snitch"] = {}
 	scan_result["Emergency"] = False
+	print(messageServer)
 	initial_turret_head = messageServer['TurretHeading']
-	current_turret_heading = messageServer['TurretHeading']
+	current_turret_heading = initial_turret_head
 	print("Start Head: "+str(current_turret_heading))
 	message_in_function = None
 	turn = True
 	while (turn):
 		if serverResponse[1] == 18:
 			message_in_function = serverResponse[0]
+
 		if message_in_function is None:
 			continue
 		elif "Id" in message_in_function:
@@ -335,7 +333,7 @@ def scan():
 def got_shot():
 	for i in range(1,3):
 		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
-		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
+		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
 
 
 #getting our tank id
@@ -359,47 +357,45 @@ def readServer():
 
 
 def main():
-	# Main loop
-	gameStart = True
-	gameLoaded = False
-	iMain = 0
-	safePos = False
-	print("inMain")
+	iMain = 15
 	while True:
 		#time.sleep(100)
 		if (iMain % 15)==0:
 			scan_out = scan()
-			print(scan_out)
+			#print(scan_out)
 		iMain+=1
-		continue
-		#lines till except continue guarantee robust start
-		#print("here")
-		#if GameServer.readMessage()[1] == 18:
-		#	messageServer = GameServer.readMessage()[0]
+		time.sleep(1)
 
-		#if GameServer.readMessage()[1] == 27:
-		#	got_shot()
-
-		#here we should start applying multithreading
-		#print(str(x) + " <- x, y -> " + str(y))
+'''
+		print(scan_out)
+		if messageServer["Health"] <6:
+			print("here")
+			print(scan_out["HealthPickup"])
+			if scan_out["HealthPickup"]:
+				print("here1")
+				outer_list=[]
+				for v in scan_out["HealthPickup"].values():
+					inner_list=[]
+					print(v[0])
+					print(v[1])
+					inner_list.append(v[0])
+					inner_list.append(v[1])
+					outer_list.append([inner_list])
+				print(outer_list)
+				goToForLists(x,y,outer_list)
+'''
+		'''
 		if safePos == False:
 			goToCampPoints(x,y,campPoints)
 			print("safe pos reached")
 			while True:
 				pass
-
-				#if GameServer.readMessage()[1] == 18:
-				#	messageServer = GameServer.readMessage()[0]
-				#	mostRecentMessage = messageServer
-
-				#if GameServer.readMessage()[1] == 27:
-				#	got_shot()
 			safePos = True
-
+		'''
 
 def movement():
 	while True:
-		goToForLists(messageServer['X'], messageServer['Y'], [[60,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
+		#goToForLists(messageServer['X'], messageServer['Y'], [[60,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
 		print("arrived")
 		if serverResponse[1] == 18:
 			pass#print("its bout me")
@@ -427,124 +423,3 @@ t1.start()
 time.sleep(1)
 t2.start()
 t3.start()
-'''
-# Main loop
-gameStart = True
-gameLoaded = False
-campPoints = [[15,90]]#[[0,100], [0,-100]]
-message = {}
-i = 0
-x = 0
-y = 0
-Tx = random.randint(-70,70)
-Ty = random.randint(-100,100)
-our_heading = 0
-has_target = False
-Target = {}
-while True:
-	#lines till except continue guarantee robust start
-	print(GameServer.readMessage()[1])
-	if GameServer.readMessage()[1]==18:
-		message = GameServer.readMessage()[0]
-
-	if GameServer.readMessage()[1]==27:
-		print("got shot!!!")
-		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
-		#got_shot()
-
-
-
-	if gameStart:
-		id = start(message)
-		gameStart = False
-		print("firstMessageReceived")
-
-	if message['Id'] == id:
-		updatePos()
-
-	if has_target:
-		fireCoord(message, Ty, Ty, x, y)
-	else:
-		print("ney")
-		scan_result = scan()
-
-		if scan_result["Tank"] != {}:
-			print("detectank")
-			for tank in scan_result["Tank"]:
-				print(tank)
-
-	time.sleep(0.01)
-	#here we should start applying multithreading
-	print(str(x) + " <- x, y -> " + str(y))
-	#goToCampPoints(x,y,campPoints)
-
-
-	i += 1
-	if i > 10:
-		i = 0
-'''
-
-'''
-	randX = random.randint(-70,70)
-	randY = random.randint(-100,100)
-	i = 0
-	while True:
-		message = GameServer.readMessage()
-		print(message)
-		print(str(randX) + str(randY))
-		#fireCoord(message,randX,randY)
-		if i == 14:
-			randX = random.randint(-70, 70)
-			randY = random.randint(-100, 100)
-		i = i + 1
-		if i > 15:
-			i = 0
-	"""
-	gameStart = True
-	campPoints = [[15,90]]#[[0,100], [0,-100]]
-	message = {}
-	i = 0
-	while True:
-		message = GameServer.readMessage()
-		print("here")
-
-
-
-		if message != {} and gameStart:
-			id = start(message)
-			messageTemp = message
-	#		print(messageTemp)
-			gameStart = False
-
-
-
-	#	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': 90})
-		#print(message)
-
-	#	if id not in message and message["Type"] == "Tank":
-	#		print(getHeading(messageTemp['X'], messageTemp['Y'], message['X'], message['Y']))
-	#		print("above get heading result")
-
-
-		#id = start(message)
-
-		#goToCampPoints(messageTemp, campPoints)
-
-		#time.sleep(1000)
-
-
-
-		#
-		#if i == 5:
-			#if random.randint(0, 10) > 5:
-				#pass
-				#logging.info("Firing")
-				#GameServer.sendMessage(ServerMessageTypes.FIRE)
-		#elif i == 10:
-			#logging.info("Turning randomly")
-			#GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(0, 359)})
-		#elif i == 15:
-		#	logging.info("Moving randomly")
-		#	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(0, 10)})
-'''
-
