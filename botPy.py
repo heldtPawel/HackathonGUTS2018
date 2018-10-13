@@ -380,19 +380,19 @@ idTank = GameServer.readMessage()[0]['Id']
 def readServer():
 	global messageServer
 	while True:
-<<<<<<< HEAD
+
 		try:
 			messageServer = GameServer.readMessage()[0]
 		except:
 			continue
-=======
+
 		if GameServer.readMessage()[1] == 18:
 			messageServer = GameServer.readMessage()[0]
 			mostRecentMessage = messageServer
 
 		if GameServer.readMessage()[1] == 27:
 			got_shot()
->>>>>>> 0553ba6ecd61444c1319aa0d5fa474a26ad53aa6
+
 
 
 def main():
@@ -407,15 +407,7 @@ def main():
 	safePos = False
 
 	while True:
-		#print('move')
-		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
-		try:
-			pass
 
-
-
-		except:
-			continue
 		time.sleep(1)
 		continue
 		#lines till except continue guarantee robust start
