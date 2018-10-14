@@ -310,6 +310,7 @@ def fastScan():
 					try:
 						aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
 						movementContoller = True
+						time.sleep(5)
 						chase(aimHeading, dist, enemyTarget)
 						movementContoller = False
 						print("fastscan finished")
@@ -482,6 +483,11 @@ def hitTest (aim_x, aim_y, delta_x, delta_y, time_diff):
 	return missDist
 
 
+def roamingFns():
+	startMessage = messageServer
+	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 25})
+	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint((messageServer['Heading']-45)%360,(messageServer['Heading']-45)%360)})
+
 def aimAngle(aimHeading):
 	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
 
@@ -521,7 +527,6 @@ def main():
 	time.sleep(3)
 	while True:
 		fastScan()
-
 		#time.sleep(100)
 		if (iMain % 15)==0:
 			scan_out = scan()
@@ -551,15 +556,18 @@ def main():
 
 def movement():
 	while True:
+		print("i'm false")
 		while movementContoller == False:
-			goToForLists(messageServer['X'], messageServer['Y'], [[0,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
+			#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': 15})
+			#goToForLists(messageServer['X'], messageServer['Y'], [[0,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
 			print("arrived")
+			time.sleep(1)
 			if serverResponse[1] == 18:
 				pass#print("its bout me")
 			elif serverResponse[1] == 27:
 				print("got shot")
 				#got_shot()
-			time.sleep(70)
+			#time.sleep(70)
 '''
 def movement():
 	while True:
