@@ -307,13 +307,12 @@ def fastScan():
 				dist = calculateDistance(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
 				if dist < 30:
 					print(str(dist) + " so close")
-					fireCoord(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
-					print("FIRE!!!!!!")
 					try:
 						aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
 						movementContoller = True
-						chase(aimHeading, dist)
+						chase(aimHeading, dist, enemyTarget)
 						movementContoller = False
+						print("fastscan finished")
 						break
 					except:
 						continue
@@ -335,19 +334,30 @@ def fastScan():
 
 		iFS += 1
 
-def chase(aimHeading, dist):
+def chase(aimHeading, dist, enemyTarget):
+
 	iChase = 0
 	GameServer.sendMessage(ServerMessageTypes.STOPALL)
-	while iChase < 4:
+	escapeFlag = False
+	while iChase < 4 and escapeFlag == False:
+		print("chasing")
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':360 - aimHeading})
 		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':360 - aimHeading})
-
-		time.sleep(1)
-
 		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':dist/2})
-		aimHeading = ultraScan()
-		dist = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
-		fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+
+		fireCoord(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
+		print("fire")
+		dist = calculateDistance(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
+
+		enemyTargetNew = ultraScan()
+
+		if enemyTargetNew == enemyTarget:
+			if escapeFlag == True:
+				break
+			else:
+				enemyTargetNew = ultraScan()
+				escapeFlag = True
+				continue
 
 		iChase+=1
 
@@ -369,13 +379,15 @@ def ultraScan():
 				distUS = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
 				if distUS < 25:
 					print(str(distUS)+ " so close")
-					fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
-					print("FIRE!!!!!!")
-					aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					return enemyTarget
+				else:
 					continue
 
 
-	current_turret_headingUS =(current_turret_headingUS + 45) % 360
+	if iFS < 2 or iFS >=6:
+		current_turret_heading =(current_turret_heading + 30) % 360
+	elif iFS >=2 and iFS <6:
+		current_turret_heading =(current_turret_heading - 30) % 360
 
 
 def got_shot():
