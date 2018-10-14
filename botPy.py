@@ -297,33 +297,79 @@ def scan():
 def fastScan():
 	initial_turret_head = messageServer['TurretHeading']
 	current_turret_heading = initial_turret_head
-	turn = True
+	turnFS = True
 
-	while (turn):
+	while turnFS:
 		if serverResponse[1] == 18:
 			message_in_function = serverResponse[0]
 			if message_in_function["Id"] != idTank and message_in_function["Type"] == "Tank":
-				print("enemyTank")
-				if message_in_function["Health"] < 7:
+				#print("enemyTank")
+				if message_in_function["Health"] < 7:#tempValue
 					dist = calculateDistance(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
 					if dist < 30:
 						print(str(dist) + " so close")
 						fireCoord(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
 						print("FIRE!!!!!!")
+						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+						movementContoller = True
+						chase(aimHeading, dist)
+						break
+
+					else:
+						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+						movementContoller = True
+						chase(aimHeading, dist)
 						break
 
 		current_turret_heading =(current_turret_heading + 15) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
 		time.sleep(0.15)
 		if (math.fabs(current_turret_heading-initial_turret_head) < 1):
-			turn = False
-			print("no tanks found")
+			turnFS += False
+			print("no tanks found during fast scan")
 
 
+def chase(aimHeading, dist):
+	GameServer.sendMessage(ServerMessageTypes.STOPALL)
+	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':aimHeading})
+	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':aimHeading})
+	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':dist/2})
+	ultraScan()
 
-		if message_in_function is None:
-			continue
 
+	print("whaaat")
+	pass
+
+
+def ultraScan():
+	initial_turret_head = messageServer['TurretHeading']
+	current_turret_heading = initial_turret_head
+	turnUS = True
+	while (turnUS):
+		if serverResponse[1] == 18:
+			message_in_function = serverResponse[0]
+			if message_in_function["Id"] != idTank and message_in_function["Type"] == "Tank":
+				#print("enemyTank")
+				if message_in_function["Health"] < 7:
+					dist = calculateDistance(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+					if dist < 25:
+						print(str(dist) + " so close")
+						fireCoord(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+						print("FIRE!!!!!!")
+						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+						chase(aimHeading, dist)
+						break
+					else:
+						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
+						chase(aimHeading, dist)
+						break
+
+		current_turret_heading =(current_turret_heading + 45) % 360
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
+		time.sleep(0.30)
+		if (math.fabs(current_turret_heading-initial_turret_head) < 1):
+			turnUS = False
+			print("no tanks found during chase")
 
 def got_shot():
 	for i in range(1,3):
@@ -376,7 +422,6 @@ def find_Shoot(has_target, target):
 
 
 def aimAngle(aimHeading):
-
 	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
 
 def fireCoord(x, y, Tx, Ty):
@@ -406,8 +451,7 @@ def main():
 	iMain = 15
 	time.sleep(3)
 	while True:
-		GameServer.sendMessage(ServerMessageTypes.FIRE)
-		#fastScan()
+		fastScan()
 
 		#time.sleep(100)
 		#if (iMain % 15)==0:
@@ -449,14 +493,15 @@ def main():
 
 def movement():
 	while True:
-		goToForLists(messageServer['X'], messageServer['Y'], [[0,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
-		print("arrived")
-		if serverResponse[1] == 18:
-			pass#print("its bout me")
-		elif serverResponse[1] == 27:
-			print("got shot")
-			#got_shot()
-		time.sleep(70)
+		while movementContoller == False:
+			goToForLists(messageServer['X'], messageServer['Y'], [[0,0]])#[[15,90],[-15,90],[15,-90],[-15,-90]])
+			print("arrived")
+			if serverResponse[1] == 18:
+				pass#print("its bout me")
+			elif serverResponse[1] == 27:
+				print("got shot")
+				#got_shot()
+			time.sleep(70)
 '''
 def movement():
 	while True:
@@ -469,6 +514,8 @@ def movement():
 
 '''
 #getting our tank id
+global movementContoller
+movementContoller = False
 messageTemp = GameServer.readMessage()
 if messageTemp[1] == 18:
 	global idTank
