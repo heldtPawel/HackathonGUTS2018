@@ -298,54 +298,71 @@ def fastScan():
 	initial_turret_head = messageServer['TurretHeading']
 	current_turret_heading = initial_turret_head
 	turnFS = True
-
+	iFS = 0
 	while turnFS:
 		if enemiesIntel != None:
-			#print("enemyTank")
-			if enemiesIntel["Health"] < 7:#tempValue
-				dist = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
-
+			enemyTarget = enemiesIntel
+			if enemyTarget["Health"] < 7:#tempValue
+				#print(enemiesIntel)
+				dist = calculateDistance(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
 				if dist < 30:
 					print(str(dist) + " so close")
-					fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					fireCoord(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
 					print("FIRE!!!!!!")
-					aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
-					movementContoller = True
-					chase(aimHeading, dist)
-					break
-
+					try:
+						aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemyTarget["X"],enemyTarget["Y"])
+						movementContoller = True
+						chase(aimHeading, dist)
+						movementContoller = False
+						break
+					except:
+						continue
 				#else:
 					#aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
 					#movementContoller = True
 				#	chase(aimHeading, dist)
 				#	break
-
-		current_turret_heading =(current_turret_heading + 15) % 360
+		if iFS < 4 or iFS >=12:
+			current_turret_heading =(current_turret_heading + 15) % 360
+		elif iFS >=4 and iFS <12:
+			current_turret_heading =(current_turret_heading - 15) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
 		time.sleep(0.15)
 		if (math.fabs(current_turret_heading-initial_turret_head) < 1):
-			turnFS += False
-			print("no tanks found during fast scan")
+			if iFS > 8:
+				turnFS = False
+				print("no tanks found during fast scan")
 
+		iFS += 1
 
 def chase(aimHeading, dist):
+	iChase = 0
 	GameServer.sendMessage(ServerMessageTypes.STOPALL)
-	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':360 - aimHeading})
-	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':360 - aimHeading})
-	time.sleep(1)
-	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':dist/2})
-	ultraScan()
+	while iChase < 4:
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':360 - aimHeading})
+		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':360 - aimHeading})
 
+		time.sleep(1)
 
-	print("whaaat")
-	pass
+		GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':dist/2})
+		aimHeading = ultraScan()
+		dist = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+		fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+
+		iChase+=1
 
 
 def ultraScan():
+
 	initial_turret_headUS = messageServer['TurretHeading']
 	current_turret_headingUS = initial_turret_headUS
 	turnUS = True
 	while (turnUS):
+		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_headingUS})
+		time.sleep(0.30)
+		if (math.fabs(current_turret_headingUS-initial_turret_headUS) < 1):
+			turnUS = False
+			print("no tanks found during chase")
 		if enemiesIntel is not None:
 			#print("enemyTank")
 			if enemiesIntel["Health"] < 7:
@@ -353,29 +370,70 @@ def ultraScan():
 				if distUS < 25:
 					print(str(distUS)+ " so close")
 					fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
-					print("FIRE!!!!!! " + str(time.time()))
+					print("FIRE!!!!!!")
 					aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
-					GameServer.sendMessage(ServerMessageTypes.STOPALL)
-					GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':360 - aimHeading})
-					GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':360 - aimHeading})
-					time.sleep(1.5)
-					GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':distUS/2})
 					continue
 
 
 	current_turret_headingUS =(current_turret_headingUS + 45) % 360
-	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_headingUS})
-	time.sleep(0.30)
-	if (math.fabs(current_turret_headingUS-initial_turret_headUS) < 1):
-		turnUS = False
-		print("no tanks found during chase")
 
+
+def got_shot():
+	for i in range(1,3):
+		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
+		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
+
+def pick_up_health(scan_out,messageServer):
+	if scan_out["HealthPickup"]:
+		flag=False
+		outer_list=[]
+		for k, v in scan_out["HealthPickup"].items():
+			print("key: {0}, value: {1}".format(k, v))
+
+			inner_list=[]
+
+			inner_list.append(v["x"])
+			inner_list.append(v["y"])
+			outer_list.append(inner_list)
+		for l in outer_list:
+			if calculateDistance(messageServer["X"],messageServer["Y"],l[0],l[1])<60:
+				flag = True
+		if flag:
+			goToForLists(messageServer["X"],messageServer["Y"],outer_list)
+'''
+def find_Shoot(has_target, target):
+	if has_target:
+		fireCoord(messageServer, target['X'], target['Y'], x, y)
+		if 'Id' in messageServer and messageServer['Id'] == target['Id']:
+			target = messageServer
+	# if target
+	else:
+		scan_result = scan()
+		if scan_result["Tank"] != {}:
+			print("detectank")
+			has_target = True
+			low_hp = 6
+			low_dist = 200
+			for tank in scan_result["Tank"]:
+				if tank['hp'] < low_hp:
+					low_hp = tank['hp']
+					target = tank
+				elif tank['hp'] == low_hp:
+					if tank['dist'] < low_dist:
+						low_dist = tank['dist']
+						target = tank
+		else:
+			has_target = False
+
+	return has_target, target
+'''
 def update_target_dict(enemiesIntel, target_dict):
 	if enemiesIntel['Id'] in target_dict:
 		target_dict[enemiesIntel['Id']].append([enemiesIntel['X'], enemiesIntel['Y'], time.time])
 	else:
 		target_dict[enemiesIntel["Id"]] = [[]]
 		target_dict[enemiesIntel['Id']].append([enemiesIntel['X'],enemiesIntel['Y'],time.time])
+
 
 def smart_shot(enemiesIntel, target_dict):
 	delta_x = 0
@@ -411,55 +469,6 @@ def hitTest (aim_x, aim_y, delta_x, delta_y, time_diff):
 	missDist = calculateDistance(x_actual, y_actual, aim_x, aim_y)
 	return missDist
 
-def got_shot():
-	for i in range(1,3):
-		GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING, {'Amount': random.randint(210,330)})
-		#GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE, {'Amount': random.randint(80,120)})
-
-def pick_up_health(scan_out,messageServer):
-	if scan_out["HealthPickup"]:
-		flag=False
-		outer_list=[]
-		for k, v in scan_out["HealthPickup"].items():
-			print("key: {0}, value: {1}".format(k, v))
-
-			inner_list=[]
-
-			inner_list.append(v["x"])
-			inner_list.append(v["y"])
-			outer_list.append(inner_list)
-		for l in outer_list:
-			if calculateDistance(messageServer["X"],messageServer["Y"],l[0],l[1])<60:
-				flag = True
-		if flag:
-			goToForLists(messageServer["X"],messageServer["Y"],outer_list)
-
-def find_Shoot(has_target, target):
-	if has_target:
-		fireCoord(messageServer, target['X'], target['Y'], x, y)
-		if 'Id' in messageServer and messageServer['Id'] == target['Id']:
-			target = messageServer
-	# if target
-	else:
-		scan_result = scan()
-		if scan_result["Tank"] != {}:
-			print("detectank")
-			has_target = True
-			low_hp = 6
-			low_dist = 200
-			for tank in scan_result["Tank"]:
-				if tank['hp'] < low_hp:
-					low_hp = tank['hp']
-					target = tank
-				elif tank['hp'] == low_hp:
-					if tank['dist'] < low_dist:
-						low_dist = tank['dist']
-						target = tank
-		else:
-			has_target = False
-
-	return has_target, target
-
 
 def aimAngle(aimHeading):
 	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING, {'Amount': 360 - aimHeading})
@@ -490,27 +499,21 @@ def readServer():
 			elif serverResponse[0]['Type'] == "Tank":
 				enemiesIntel = serverResponse[0]
 				#print(enemiesIntel)
-			if serverResponse[1] == 28:
-				print("Hit: " + str(time.time()))
-
 
 		except:
 			continue
 
 
 def main():
-	target_dict = {}
 	iMain = 15
 	time.sleep(3)
-	#global time_Start = time.time()
 	while True:
 		fastScan()
 
 		#time.sleep(100)
 		if (iMain % 15)==0:
 			scan_out = scan()
-		if serverResponse[1] == 28:
-			print("Hit:                                                                                                                                                              " + str(time.time()))
+
 		#iMain+=1
 		#time.sleep(1)
 
