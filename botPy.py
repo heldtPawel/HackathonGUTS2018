@@ -393,9 +393,12 @@ def fireCoord(x, y, Tx, Ty):
 def readServer():
 	global messageServer
 	global serverResponse
+
 	while True:
+		serverResponseNo=-1
 		try:
 			serverResponse = GameServer.readMessage()
+
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
 		except:
@@ -410,9 +413,9 @@ def main():
 		#fastScan()
 
 		#time.sleep(100)
-		#if (iMain % 15)==0:
-			#scan_out = scan()
-			#print(scan_out)
+		if (iMain % 15)==0:
+			scan_out = scan()
+
 		#iMain+=1
 		#time.sleep(1)
 
@@ -424,6 +427,7 @@ def main():
 			goToForLists(messageServer["X"],messageServer["Y"],[[random.randint(-15,15), random.randint(80,90)]])
 		if messageServer["Y"]<-101:
 			goToForLists(messageServer["X"],messageServer["Y"],[[random.randint(-15,15), random.randint(-80,-90)]])
+
 
 '''
 
