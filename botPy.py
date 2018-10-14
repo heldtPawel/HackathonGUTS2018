@@ -300,26 +300,24 @@ def fastScan():
 	turnFS = True
 
 	while turnFS:
-		if serverResponse[1] == 18:
-			message_in_function = serverResponse[0]
-			if message_in_function["Id"] != idTank and message_in_function["Type"] == "Tank":
-				#print("enemyTank")
-				if message_in_function["Health"] < 7:#tempValue
-					dist = calculateDistance(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-					if dist < 30:
-						print(str(dist) + " so close")
-						fireCoord(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-						print("FIRE!!!!!!")
-						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-						movementContoller = True
-						chase(aimHeading, dist)
-						break
+		if enemiesIntel != None:
+			#print("enemyTank")
+			if enemiesIntel["Health"] < 7:#tempValue
+				dist = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+				if dist < 30:
+					print(str(dist) + " so close")
+					fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					print("FIRE!!!!!!")
+					aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					movementContoller = True
+					chase(aimHeading, dist)
+					break
 
-					else:
-						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-						movementContoller = True
-						chase(aimHeading, dist)
-						break
+				#else:
+					#aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					#movementContoller = True
+				#	chase(aimHeading, dist)
+				#	break
 
 		current_turret_heading =(current_turret_heading + 15) % 360
 		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
@@ -331,8 +329,9 @@ def fastScan():
 
 def chase(aimHeading, dist):
 	GameServer.sendMessage(ServerMessageTypes.STOPALL)
-	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':aimHeading})
-	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':aimHeading})
+	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':360 - aimHeading})
+	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':360 - aimHeading})
+	time.sleep(1)
 	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':dist/2})
 	ultraScan()
 
@@ -342,34 +341,33 @@ def chase(aimHeading, dist):
 
 
 def ultraScan():
-	initial_turret_head = messageServer['TurretHeading']
-	current_turret_heading = initial_turret_head
+	initial_turret_headUS = messageServer['TurretHeading']
+	current_turret_headingUS = initial_turret_headUS
 	turnUS = True
 	while (turnUS):
-		if serverResponse[1] == 18:
-			message_in_function = serverResponse[0]
-			if message_in_function["Id"] != idTank and message_in_function["Type"] == "Tank":
-				#print("enemyTank")
-				if message_in_function["Health"] < 7:
-					dist = calculateDistance(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-					if dist < 25:
-						print(str(dist) + " so close")
-						fireCoord(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-						print("FIRE!!!!!!")
-						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-						chase(aimHeading, dist)
-						break
-					else:
-						aimHeading = getHeading(messageServer['X'],messageServer['Y'],message_in_function["X"],message_in_function["Y"])
-						chase(aimHeading, dist)
-						break
+		if enemiesIntel is not None:
+			#print("enemyTank")
+			if enemiesIntel["Health"] < 7:
+				distUS = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+				if distUS < 25:
+					print(str(distUS)+ " so close")
+					fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					print("FIRE!!!!!!")
+					aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					GameServer.sendMessage(ServerMessageTypes.STOPALL)
+					GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':360 - aimHeading})
+					GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':360 - aimHeading})
+					time.sleep(1.5)
+					GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':distUS/2})
+					continue
 
-		current_turret_heading =(current_turret_heading + 45) % 360
-		GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_heading})
-		time.sleep(0.30)
-		if (math.fabs(current_turret_heading-initial_turret_head) < 1):
-			turnUS = False
-			print("no tanks found during chase")
+
+	current_turret_headingUS =(current_turret_headingUS + 45) % 360
+	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':current_turret_headingUS})
+	time.sleep(0.30)
+	if (math.fabs(current_turret_headingUS-initial_turret_headUS) < 1):
+		turnUS = False
+		print("no tanks found during chase")
 
 def got_shot():
 	for i in range(1,3):
@@ -438,14 +436,19 @@ def fireCoord(x, y, Tx, Ty):
 def readServer():
 	global messageServer
 	global serverResponse
-
+	global enemiesIntel
+	enemiesIntel = None
 	while True:
-		serverResponseNo=-1
+		#serverResponse=-1
+
 		try:
 			serverResponse = GameServer.readMessage()
-
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
+			elif serverResponse[0]['Type'] == "Tank":
+				enemiesIntel = serverResponse[0]
+				#print(enemiesIntel)
+
 		except:
 			continue
 
@@ -505,6 +508,7 @@ def movement():
 		time.sleep(70)
 
 '''
+
 #getting our tank id
 global movementContoller
 movementContoller = False
