@@ -294,7 +294,7 @@ def scan():
 	print("End Head: " + str(current_turret_heading))
 	return scan_result
 
-def fastScan():
+def fastScan(target_dict):
 	initial_turret_head = messageServer['TurretHeading']
 	current_turret_heading = initial_turret_head
 	turnFS = True
@@ -306,12 +306,14 @@ def fastScan():
 				dist = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
 
 				if dist < 30:
+					update_target_dict(enemiesIntel, target_dict)
 					print(str(dist) + " so close")
-					fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					E_x, E_y = smart_shot(enemiesIntel, target_dict)
+					fireCoord(messageServer['X'], messageServer['Y'], E_x, E_y)
 					print("FIRE!!!!!!")
 					aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
 					movementContoller = True
-					chase(aimHeading, dist)
+					chase(aimHeading, dist, target_dict)
 					break
 
 				#else:
@@ -328,20 +330,20 @@ def fastScan():
 			print("no tanks found during fast scan")
 
 
-def chase(aimHeading, dist):
+def chase(aimHeading, dist, target_dict):
 	GameServer.sendMessage(ServerMessageTypes.STOPALL)
 	GameServer.sendMessage(ServerMessageTypes.TURNTURRETTOHEADING,{'Amount':360 - aimHeading})
 	GameServer.sendMessage(ServerMessageTypes.TURNTOHEADING,{'Amount':360 - aimHeading})
 	time.sleep(1)
 	GameServer.sendMessage(ServerMessageTypes.MOVEFORWARDDISTANCE,{'Amount':dist/2})
-	ultraScan()
+	ultraScan(target_dict)
 
 
 	print("whaaat")
 	pass
 
 
-def ultraScan():
+def ultraScan(target_dict):
 	initial_turret_headUS = messageServer['TurretHeading']
 	current_turret_headingUS = initial_turret_headUS
 	turnUS = True
@@ -351,8 +353,10 @@ def ultraScan():
 			if enemiesIntel["Health"] < 7:
 				distUS = calculateDistance(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
 				if distUS < 25:
+					update_target_dict(enemiesIntel, target_dict)
 					print(str(distUS)+ " so close")
-					fireCoord(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
+					E_x, E_y =smart_shot(enemiesIntel, target_dict)
+					fireCoord(messageServer['X'],messageServer['Y'],E_x,E_y)
 					print("FIRE!!!!!! " + str(time.time()))
 					aimHeading = getHeading(messageServer['X'],messageServer['Y'],enemiesIntel["X"],enemiesIntel["Y"])
 					GameServer.sendMessage(ServerMessageTypes.STOPALL)
@@ -371,24 +375,34 @@ def ultraScan():
 		print("no tanks found during chase")
 
 def update_target_dict(enemiesIntel, target_dict):
+	E_id = enemiesIntel['Id']
+	E_x = enemiesIntel['X']
+	E_y = enemiesIntel['Y']
 	if enemiesIntel['Id'] in target_dict:
-		target_dict[enemiesIntel['Id']].append([enemiesIntel['X'], enemiesIntel['Y'], time.time])
+		target_dict[E_id].append([E_x, E_y, time.time()])
 	else:
-		target_dict[enemiesIntel["Id"]] = [[]]
-		target_dict[enemiesIntel['Id']].append([enemiesIntel['X'],enemiesIntel['Y'],time.time])
+		target_dict[enemiesIntel["Id"]] = []
+		target_dict[E_id].append([E_x, E_y,time.time()])
 
 def smart_shot(enemiesIntel, target_dict):
 	delta_x = 0
 	delta_y = 0
 	time_diff = 0
-	for i in range(len(target_dict[enemiesIntel['Id']]), 0, -1):
-		if (target_dict[enemiesIntel][i][2] - time.time()) < 0.6 and (target_dict[enemiesIntel][i][2] - time.time()) > 0.01:
-			delta_x = enemiesIntel['X'] - target_dict[enemiesIntel['Id']][i][0]
-			delta_y = enemiesIntel['Y'] - target_dict[enemiesIntel['Id']][i][1]
-			time_diff = target_dict[enemiesIntel][i][2] - time.time()
-		velocity = math.sqrt((delta_x**2)+(delta_y**2))/time_diff
-		aim_x = enemiesIntel['X']
-		aim_y = enemiesIntel['Y']
+	E_id = enemiesIntel['Id']
+	aim_x = enemiesIntel['X']
+	aim_y = enemiesIntel['Y']
+	for i in range(len(target_dict[E_id])-1, 0, -1):
+		print(i)
+		print(target_dict[E_id][i])
+		t_time = target_dict[E_id][i][2]
+		if (t_time - time.time()) < 0.6 and (t_time - time.time()) > 0.01:
+			delta_x = enemiesIntel['X'] - target_dict[E_id][i][0]
+			delta_y = enemiesIntel['Y'] - target_dict[E_id][i][1]
+			time_diff = t_time - time.time()
+			break
+
+	if time_diff < 0.6 and time_diff > 0.01:
+		print("yuh")
 		while True:
 			missDist = hitTest(aim_x, aim_y, delta_x, delta_y, time_diff)
 			if missDist < 3.0:
@@ -402,10 +416,12 @@ def smart_shot(enemiesIntel, target_dict):
 				aim_x -= (delta_x * missDist / 2)
 				aim_y -= (delta_y * missDist / 2)
 	return aim_x, aim_y
+
 def hitTest (aim_x, aim_y, delta_x, delta_y, time_diff):
+	print("hitTest")
 	velocity = math.sqrt((delta_x ** 2) + (delta_y ** 2)) / time_diff
 	aim_dist = calculateDistance(messageServer['X'], messageServer['Y'], aim_x, aim_y)
-	time_taken = aim_dist/(velocity*4)
+	time_taken = aim_dist/(40)
 	x_actual = delta_x*time_taken/time_diff
 	y_actual = delta_y*time_taken/time_diff
 	missDist = calculateDistance(x_actual, y_actual, aim_x, aim_y)
@@ -504,7 +520,8 @@ def main():
 	time.sleep(3)
 	#global time_Start = time.time()
 	while True:
-		fastScan()
+
+		fastScan(target_dict)
 
 		#time.sleep(100)
 		if (iMain % 15)==0:
