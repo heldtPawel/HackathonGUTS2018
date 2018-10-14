@@ -438,9 +438,12 @@ def fireCoord(x, y, Tx, Ty):
 def readServer():
 	global messageServer
 	global serverResponse
+
 	while True:
+		serverResponseNo=-1
 		try:
 			serverResponse = GameServer.readMessage()
+
 			if serverResponse[0]['Id'] == idTank:
 				messageServer = serverResponse[0]
 		except:
@@ -454,34 +457,23 @@ def main():
 		fastScan()
 
 		#time.sleep(100)
-		#if (iMain % 15)==0:
-			#scan_out = scan()
-			#print(scan_out)
+		if (iMain % 15)==0:
+			scan_out = scan()
+
 		#iMain+=1
 		#time.sleep(1)
 
 		if messageServer["Health"] <3:
 			pick_up_health(scan_out, messageServer)
 
+		# get out of the net
+		if messageServer["Y"]>101:
+			goToForLists(messageServer["X"],messageServer["Y"],[[random.randint(-15,15), random.randint(80,90)]])
+		if messageServer["Y"]<-101:
+			goToForLists(messageServer["X"],messageServer["Y"],[[random.randint(-15,15), random.randint(-80,-90)]])
 
 
 '''
-		if messageServer["Health"] <6:
-			print("here")
-			print(scan_out["HealthPickup"])
-			if scan_out["HealthPickup"]:
-				print("here1")
-				outer_list=[]
-				for v in scan_out["HealthPickup"].values():
-					inner_list=[]
-					print(v[0])
-					print(v[1])
-					inner_list.append(v[0])
-					inner_list.append(v[1])
-					outer_list.append([inner_list])
-				print(outer_list)
-				goToForLists(x,y,outer_list)
-
 
 		if safePos == False:
 			goToCampPoints(x,y,campPoints)
